@@ -61,7 +61,6 @@ pub async fn main()
 
 	let file_evts   = EHandler::new( &upload, "change", false );
 
-	spawn_local( on_upload( file_evts ) );
 
 	let column_cont: HtmlElement = document.get_element_by_id( "columns" ).expect_throw( "doc should have columns element" ).unchecked_into();
 
@@ -69,6 +68,7 @@ pub async fn main()
 
 	columns.render();
 
+	spawn_local( on_upload( file_evts, columns ) );
 	// // Manufacture the element we're gonna append
 	// //
 	// let val = document.create_element( "div" ).expect( "Failed to create div" );
@@ -99,19 +99,20 @@ fn get_id( id: &str ) -> HtmlElement
 async fn on_upload
 (
 	mut evts: impl Stream< Item=Event > + Unpin ,
+	columns: Columns,
 )
 {
 	debug!( "in on_upload" );
 
 	let upload: HtmlInputElement = get_id( "upload" ).unchecked_into();
 
-	while let Some( evt ) = evts.next().await
+	while let Some(_) = evts.next().await
 	{
 		let file_list = upload.files().expect_throw( "get filelist" );
 		let file = file_list.get( 0 ).expect_throw( "get first file" );
 
 		let text = JsFuture::from( file.text() ).await.expect_throw( "file upload complete" ).as_string().expect_throw( "string content" );
 
-
+		columns.set_text( text );
 	};
 }

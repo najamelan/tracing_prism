@@ -23,11 +23,27 @@ impl Column
 		let filter: HtmlElement = get_id( "filter-base" ).clone_node_with_deep( true ).expect( "clone filter" ).unchecked_into();
 		filter.set_class_name( "filter-input" );
 
-		let log: HtmlElement = document().create_element( "pre" ).expect_throw( "create pre" ).unchecked_into();
-
 		self.container.append_child( &filter ).expect_throw( "append filter" );
-		self.container.append_child( &log    ).expect_throw( "append log"    );
 
 		self.parent.append_child( &self.container ).expect_throw( "append column" );
+	}
+
+
+	pub fn set_text( &self, div: HtmlElement )
+	{
+		// if the element exists, remove it
+		// add the new one
+
+		if let Some(elem) = self.container.query_selector( ".logview" ).expect_throw( "use query_selector" )
+		{
+			// Hopefully leak a bit less memory:
+			// https://stackoverflow.com/a/3785323
+			// needs some more research.
+			//
+			elem.set_inner_html( "" );
+			elem.remove();
+		}
+
+		self.container.append_child( &div ).expect_throw( "append div" );
 	}
 }

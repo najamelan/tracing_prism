@@ -1,4 +1,4 @@
-use crate::{ import::*, column::Column };
+use crate::{ *, import::*, column::Column };
 
 
 pub struct Columns
@@ -32,6 +32,25 @@ impl Columns
 		for child in &self.children
 		{
 			child.render();
+		}
+	}
+
+
+	pub fn set_text( &self, text: String )
+	{
+		let block = document().create_element( "div" ).expect_throw( "create div tag" );
+
+		for line in text.lines()
+		{
+			let p: HtmlElement = document().create_element( "p" ).expect_throw( "create p tag" ).unchecked_into();
+			p.set_inner_text( line );
+			block.append_child( &p ).expect_throw( "append p" );
+			block.set_class_name( "logview" );
+		}
+
+		for child in &self.children
+		{
+			child.set_text( block.clone_node_with_deep( true ).expect_throw( "clone text" ).unchecked_into() );
 		}
 	}
 }
