@@ -1,0 +1,33 @@
+# Auto-generated from "Cargo.yml"
+[dependencies]
+console_log = "^0.2"
+futures = "^0.3"
+gloo-events = "^0.1"
+log = "^0.4"
+wasm-bindgen = "^0.2"
+wasm-bindgen-futures = "^0.4"
+
+[dependencies.async_executors]
+features = ["bindgen"]
+version = "^0.3"
+
+[dependencies.thespis]
+path = "../thespis/thespis"
+
+[dependencies.thespis_impl]
+features = []
+path = "../thespis/thespis_impl"
+
+[dependencies.web-sys]
+features = ["console", "Document", "Element", "HtmlElement", "Node", "Window", "HtmlInputElement", "FileList", "File", "Blob"]
+version = "^0.3"
+
+[lib]
+crate-type = ["cdylib"]
+path = "src/entrypoint.rs"
+
+[package]
+authors = ["Naja Melan <najamelan@autistici.org>"]
+edition = "2018"
+name = "tracing_prism"
+version = "0.1.0"

@@ -1,0 +1,47 @@
+
+
+
+body
+{
+	display: grid;
+	height: 100%;
+	grid-template-rows: auto minmax(0, 1fr);
+}
+
+.template
+{
+	display: none;
+}
+
+
+#header > *
+{
+	display: inline-block;
+}
+
+
+#controls *
+{
+	display: inline-block;
+}
+
+
+.column
+{
+	border: dashed 1px black;
+	padding: .5vw;
+}
+
+
+.column pre
+{
+	border: dashed 1px black;
+	padding: .5vw;
+}
+
+
+#columns
+{
+	display: grid;
+	grid-auto-flow: column;
+}
