@@ -102,8 +102,6 @@ async fn on_upload
 	columns: Columns,
 )
 {
-	debug!( "in on_upload" );
-
 	let upload: HtmlInputElement = get_id( "upload" ).unchecked_into();
 
 	while let Some(_) = evts.next().await

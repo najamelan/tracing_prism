@@ -33,10 +33,17 @@ body
 }
 
 
-.column pre
+.column div
 {
 	border: dashed 1px black;
 	padding: .5vw;
+}
+
+
+.column div p
+{
+	margin: 0;
+	font-family: monospace;
 }
 
 
@@ -45,3 +52,5 @@ body
 	display: grid;
 	grid-auto-flow: column;
 }
+
+

@@ -31,9 +31,11 @@ dependencies:
     features :
     [
       console     ,
+      CssStyleDeclaration,
       Document    ,
       Element     ,
       HtmlElement ,
+      HtmlCollection ,
       Node        ,
       Window      ,
       HtmlInputElement,

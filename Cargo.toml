@@ -19,7 +19,7 @@ features = []
 path = "../thespis/thespis_impl"
 
 [dependencies.web-sys]
-features = ["console", "Document", "Element", "HtmlElement", "Node", "Window", "HtmlInputElement", "FileList", "File", "Blob"]
+features = ["console", "CssStyleDeclaration", "Document", "Element", "HtmlElement", "HtmlCollection", "Node", "Window", "HtmlInputElement", "FileList", "File", "Blob"]
 version = "^0.3"
 
 [lib]
