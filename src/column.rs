@@ -23,7 +23,7 @@ impl Column
 
 	pub fn render( &self )
 	{
-		let filter: HtmlElement = get_id( "filter-base" ).clone_node_with_deep( true ).expect( "clone filter" ).unchecked_into();
+		let filter: HtmlElement = get_id( "col-controls" ).clone_node_with_deep( true ).expect( "clone filter" ).unchecked_into();
 		filter.set_class_name( "filter-input" );
 
 		self.container.append_child( &filter ).expect_throw( "append filter" );
