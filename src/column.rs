@@ -1,7 +1,7 @@
 use crate::{ import::*, * };
 
 
-#[ derive( Clone ) ]
+#[ derive( Actor, Clone ) ]
 //
 pub struct Column
 {
@@ -18,43 +18,6 @@ impl Column
 		container.set_class_name( "column" );
 
 		Self { parent, container }
-	}
-
-
-	pub fn render( &self )
-	{
-		let controls: HtmlElement = get_id( "col-controls" ).clone_node_with_deep( true ).expect( "clone filter" ).unchecked_into();
-		controls.set_class_name( "" );
-
-		let filter = controls.query_selector( "#filter-base" ).expect_throw( "find filter input" ).expect_throw( "find filter input" );
-
-		let filter_evts = EHandler::new( &filter, "input", false );
-
-
-		self.container.append_child( &controls       ).expect_throw( "append filter" );
-		self.parent   .append_child( &self.container ).expect_throw( "append column" );
-
-		spawn_local( Self::on_filter( self.clone(), filter_evts ) );
-	}
-
-
-	pub fn set_text( &self, div: HtmlElement )
-	{
-		// if the element exists, remove it
-		// add the new one
-		// filter the new one.
-
-		if let Some(elem) = self.container.query_selector( ".logview" ).expect_throw( "use query_selector" )
-		{
-			// Hopefully leak a bit less memory:
-			// https://stackoverflow.com/a/3785323
-			// needs some more research.
-			//
-			elem.set_inner_html( "" );
-			elem.remove();
-		}
-
-		self.container.append_child( &div ).expect_throw( "append div" );
 	}
 
 
@@ -112,3 +75,73 @@ impl Column
 }
 
 
+
+
+pub struct TextBlock
+{
+	pub block: HtmlElement,
+}
+
+unsafe impl Send for TextBlock {}
+
+impl Message for TextBlock { type Return = (); }
+
+
+
+impl Handler<TextBlock> for Column
+{
+	#[async_fn_nosend] fn handle_local( &mut self, msg: TextBlock )
+	{
+		// if the element exists, remove it
+		// add the new one
+		// filter the new one.
+
+		if let Some(elem) = self.container.query_selector( ".logview" ).expect_throw( "use query_selector" )
+		{
+			// Hopefully leak a bit less memory:
+			// https://stackoverflow.com/a/3785323
+			// needs some more research.
+			//
+			elem.set_inner_html( "" );
+			elem.remove();
+		}
+
+		self.container.append_child( &msg.block ).expect_throw( "append div" );
+	}
+
+	#[async_fn] fn handle( &mut self, _msg: TextBlock )
+	{
+		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
+	}
+}
+
+
+
+pub struct Render;
+
+impl Message for Render { type Return = (); }
+
+
+impl Handler<Render> for Column
+{
+	#[async_fn_nosend] fn handle_local( &mut self, _msg: Render )
+	{
+		let controls: HtmlElement = get_id( "col-controls" ).clone_node_with_deep( true ).expect( "clone filter" ).unchecked_into();
+		controls.set_class_name( "" );
+
+		let filter = controls.query_selector( "#filter-base" ).expect_throw( "find filter input" ).expect_throw( "find filter input" );
+
+		let filter_evts = EHandler::new( &filter, "input", false );
+
+
+		self.container.append_child( &controls       ).expect_throw( "append filter" );
+		self.parent   .append_child( &self.container ).expect_throw( "append column" );
+
+		spawn_local( Self::on_filter( self.clone(), filter_evts ) );
+	}
+
+	#[async_fn] fn handle( &mut self, _msg: Render )
+	{
+		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
+	}
+}

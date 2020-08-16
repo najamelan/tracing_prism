@@ -64,18 +64,13 @@ pub async fn main()
 
 	let column_cont: HtmlElement = document.get_element_by_id( "columns" ).expect_throw( "doc should have columns element" ).unchecked_into();
 
-	let columns = Columns::new( column_cont, 3 );
+	let mut columns = Columns::new( column_cont, 3 );
 
-	columns.render();
+	columns.render().await;
 
-	spawn_local( on_upload( file_evts, columns ) );
-	// // Manufacture the element we're gonna append
-	// //
-	// let val = document.create_element( "div" ).expect( "Failed to create div" );
+	let columns_addr = Addr::builder().start_local( columns, &Bindgen ).expect_throw( "start columns" );
 
-	// val.set_inner_html( &format!( "The pong value is: {}", res ) );
-
-	// body.append_child( &val ).expect( "Coundn't append child" );
+	spawn_local( on_upload( file_evts, columns_addr ) );
 }
 
 
@@ -99,7 +94,7 @@ fn get_id( id: &str ) -> HtmlElement
 async fn on_upload
 (
 	mut evts: impl Stream< Item=Event > + Unpin ,
-	columns: Columns,
+	mut columns: Addr<Columns>,
 )
 {
 	let upload: HtmlInputElement = get_id( "upload" ).unchecked_into();
@@ -111,6 +106,6 @@ async fn on_upload
 
 		let text = JsFuture::from( file.text() ).await.expect_throw( "file upload complete" ).as_string().expect_throw( "string content" );
 
-		columns.set_text( text );
+		columns.send( SetText{ text } ).await.expect_throw( "send settext" );
 	};
 }
