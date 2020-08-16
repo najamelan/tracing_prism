@@ -7,17 +7,18 @@ pub struct Column
 {
 	parent: HtmlElement,
 	container: HtmlElement,
+	id: usize,
 }
 
 
 impl Column
 {
-	pub fn new( parent: HtmlElement ) -> Self
+	pub fn new( parent: HtmlElement, id: usize ) -> Self
 	{
 		let container: HtmlElement = document().create_element( "div" ).expect_throw( "create div" ).unchecked_into();
 		container.set_class_name( "column" );
 
-		Self { parent, container }
+		Self { parent, container, id }
 	}
 
 

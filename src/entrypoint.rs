@@ -18,7 +18,8 @@ mod import
 		std             :: { marker::PhantomData, rc::Rc    } ,
 		gloo_events     :: { *                              } ,
 		futures         :: { Stream, StreamExt, channel::{ mpsc::{ unbounded, UnboundedReceiver, UnboundedSender } } } ,
-		std             :: { task::*, pin::Pin, panic                        } ,
+		futures         :: { task::LocalSpawnExt } ,
+		std             :: { task::*, pin::Pin, panic, collections::HashMap  } ,
 		wasm_bindgen_futures :: { spawn_local, JsFuture                      } ,
 
 	};
@@ -59,7 +60,10 @@ pub async fn main()
 	//
 	let upload = get_id( "upload" );
 
-	let file_evts   = EHandler::new( &upload, "change", false );
+	let file_evts = EHandler::new( &upload, "change", false );
+
+	let add_col = get_id( "add-column" );
+	let add_evts = EHandler::new( &add_col, "click", false );
 
 
 	let column_cont: HtmlElement = document.get_element_by_id( "columns" ).expect_throw( "doc should have columns element" ).unchecked_into();
@@ -70,7 +74,8 @@ pub async fn main()
 
 	let columns_addr = Addr::builder().start_local( columns, &Bindgen ).expect_throw( "start columns" );
 
-	spawn_local( on_upload( file_evts, columns_addr ) );
+	spawn_local( on_upload( file_evts, columns_addr.clone() ) );
+	spawn_local( on_addcol( add_evts, columns_addr ) );
 }
 
 
@@ -108,4 +113,19 @@ async fn on_upload
 
 		columns.send( SetText{ text } ).await.expect_throw( "send settext" );
 	};
+}
+
+
+async fn on_addcol
+(
+	evts: impl Stream< Item=Event > + Unpin ,
+	columns: Addr<Columns>,
+)
+{
+	evts
+
+		.map( |_| Ok( AddColumn ) )
+		.forward( columns ).await
+		.expect_throw( "send addcol" )
+	;
 }
