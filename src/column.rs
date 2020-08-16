@@ -5,10 +5,10 @@ use crate::{ import::*, * };
 //
 pub struct Column
 {
-	parent: HtmlElement,
-	container: HtmlElement,
-	columns: Addr<Columns>,
-	addr: Addr<Self>,
+	parent   : HtmlElement   ,
+	container: HtmlElement   ,
+	columns  : Addr<Columns> ,
+	addr     : Addr<Self>    ,
 }
 
 
@@ -120,6 +120,7 @@ impl Handler<TextBlock> for Column
 		}
 
 		self.container.append_child( &msg.block ).expect_throw( "append div" );
+		self.filter_text();
 	}
 
 	#[async_fn] fn handle( &mut self, _msg: TextBlock )
