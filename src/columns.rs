@@ -12,7 +12,7 @@ impl Columns
 {
 	pub fn new( container: HtmlElement, number: usize ) -> Self
 	{
-		let mut children = Vec::with_capacity( number );
+		let mut children = Vec::with_capacity( number+3 );
 
 		for _ in 0..number
 		{
@@ -52,5 +52,12 @@ impl Columns
 		{
 			child.set_text( block.clone_node_with_deep( true ).expect_throw( "clone text" ).unchecked_into() );
 		}
+	}
+
+
+	pub fn add_column( &mut self )
+	{
+		self.children.push( Column::new( self.container.clone() ) );
+		self.children.last().unwrap().render();
 	}
 }

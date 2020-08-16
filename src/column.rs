@@ -23,14 +23,16 @@ impl Column
 
 	pub fn render( &self )
 	{
-		let filter: HtmlElement = get_id( "col-controls" ).clone_node_with_deep( true ).expect( "clone filter" ).unchecked_into();
-		filter.set_class_name( "filter-input" );
+		let controls: HtmlElement = get_id( "col-controls" ).clone_node_with_deep( true ).expect( "clone filter" ).unchecked_into();
+		controls.set_class_name( "" );
 
-		self.container.append_child( &filter ).expect_throw( "append filter" );
-
-		self.parent.append_child( &self.container ).expect_throw( "append column" );
+		let filter = controls.query_selector( "#filter-base" ).expect_throw( "find filter input" ).expect_throw( "find filter input" );
 
 		let filter_evts = EHandler::new( &filter, "input", false );
+
+
+		self.container.append_child( &controls       ).expect_throw( "append filter" );
+		self.parent   .append_child( &self.container ).expect_throw( "append column" );
 
 		spawn_local( Self::on_filter( self.clone(), filter_evts ) );
 	}
@@ -79,6 +81,7 @@ impl Column
 
 	fn filter_text( &self )
 	{
+
 		let filter: HtmlInputElement = self.container.query_selector( ".filter-input" ).expect_throw( "select filter-input" ).expect_throw( "find fiter-input" ).unchecked_into();
 
 		let filter = filter.value();
