@@ -15,7 +15,7 @@ lib:
 dependencies:
 
   log                 : ^0.4
-  console_log         : ^0.2
+  wasm-logger         : ^0.2
   thespis             : { path: ../thespis/thespis                    }
   thespis_impl        : { path: ../thespis/thespis_impl, features: [] }
   futures             : ^0.3

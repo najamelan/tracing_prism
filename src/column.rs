@@ -7,18 +7,19 @@ pub struct Column
 {
 	parent: HtmlElement,
 	container: HtmlElement,
-	id: usize,
+	columns: Addr<Columns>,
+	addr: Addr<Self>,
 }
 
 
 impl Column
 {
-	pub fn new( parent: HtmlElement, id: usize ) -> Self
+	pub fn new( parent: HtmlElement, addr: Addr<Self>, columns: Addr<Columns> ) -> Self
 	{
 		let container: HtmlElement = document().create_element( "div" ).expect_throw( "create div" ).unchecked_into();
 		container.set_class_name( "column" );
 
-		Self { parent, container, id }
+		Self { parent, container, addr, columns }
 	}
 
 
@@ -72,6 +73,17 @@ impl Column
 
 			i += 1;
 		}
+	}
+
+
+	async fn on_delcol
+	(
+		mut evts: impl Stream< Item=Event > + Unpin ,
+		mut column: Addr<Column>,
+	)
+	{
+		evts.next().await;
+		column.send( DelColumn{ id: column.id() } ).await.expect_throw( "send DelColumn" );
 	}
 }
 
@@ -127,10 +139,18 @@ impl Handler<Render> for Column
 {
 	#[async_fn_nosend] fn handle_local( &mut self, _msg: Render )
 	{
-		let controls: HtmlElement = get_id( "col-controls" ).clone_node_with_deep( true ).expect( "clone filter" ).unchecked_into();
+		let controls: HtmlElement = document().query_selector( ".col-controls" )
+
+			.expect_throw( "find col-controls" )
+			.expect_throw( "find col-controls" )
+			.clone_node_with_deep( true )
+			.expect_throw( "clone filter" )
+			.unchecked_into()
+		;
+
 		controls.set_class_name( "" );
 
-		let filter = controls.query_selector( "#filter-base" ).expect_throw( "find filter input" ).expect_throw( "find filter input" );
+		let filter = controls.query_selector( ".filter-input" ).expect_throw( "find filter input" ).expect_throw( "find filter input" );
 
 		let filter_evts = EHandler::new( &filter, "input", false );
 
@@ -139,9 +159,40 @@ impl Handler<Render> for Column
 		self.parent   .append_child( &self.container ).expect_throw( "append column" );
 
 		spawn_local( Self::on_filter( self.clone(), filter_evts ) );
+
+
+		let del_col = self.container.query_selector( ".button-close" ).expect_throw( "get close button" ).expect_throw( "get close button" );
+		let del_evts = EHandler::new( &del_col, "click", false );
+
+		spawn_local( Column::on_delcol( del_evts, self.addr.clone() ) );
 	}
 
 	#[async_fn] fn handle( &mut self, _msg: Render )
+	{
+		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
+	}
+}
+
+
+
+pub struct DelColumn
+{
+	pub id: usize
+}
+
+impl Message for DelColumn { type Return = (); }
+
+
+impl Handler<DelColumn> for Column
+{
+	#[async_fn_nosend] fn handle_local( &mut self, msg: DelColumn )
+	{
+		self.container.set_inner_html( "" );
+		self.container.remove();
+		self.columns.send( msg ).await.expect_throw( "send DelColumn to Columns" );
+	}
+
+	#[async_fn] fn handle( &mut self, _msg: DelColumn )
 	{
 		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
 	}

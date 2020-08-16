@@ -42,7 +42,7 @@ use wasm_bindgen::prelude::*;
 //
 pub async fn main()
 {
-	console_log::init_with_level( log::Level::Trace ).expect_throw( "initialize logger" );
+	wasm_logger::init( wasm_logger::Config::default() );
 
 	// // start new actor
 	// //
@@ -68,14 +68,14 @@ pub async fn main()
 
 	let column_cont: HtmlElement = document.get_element_by_id( "columns" ).expect_throw( "doc should have columns element" ).unchecked_into();
 
-	let mut columns = Columns::new( column_cont, 3 );
-
+	let (addr_columns, mb_columns) = Addr::builder().build();
+	let mut columns = Columns::new( column_cont, 3, addr_columns.clone() );
 	columns.render().await;
 
-	let columns_addr = Addr::builder().start_local( columns, &Bindgen ).expect_throw( "start columns" );
+	spawn_local( async{ mb_columns.start_local( columns ).await; } );
 
-	spawn_local( on_upload( file_evts, columns_addr.clone() ) );
-	spawn_local( on_addcol( add_evts, columns_addr ) );
+	spawn_local( on_upload( file_evts, addr_columns.clone() ) );
+	spawn_local( on_addcol( add_evts, addr_columns ) );
 }
 
 

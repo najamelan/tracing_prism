@@ -8,22 +8,23 @@ pub struct Columns
 	children: HashMap<usize, Addr<Column>>,
 	container: HtmlElement,
 	last_text: Option<HtmlElement>,
+	addr_columns: Addr<Self>,
 }
 
 
 
 impl Columns
 {
-	pub fn new( container: HtmlElement, number: usize ) -> Self
+	pub fn new( container: HtmlElement, number: usize, addr_columns: Addr<Self> ) -> Self
 	{
 		let mut children = HashMap::with_capacity( number+3 );
 
 		for _ in 0..number
 		{
 			let (addr, mb) = Addr::builder().build();
-			let col        = Column::new( container.clone(), addr.id() );
+			let col        = Column::new( container.clone(), addr.clone(), addr_columns.clone() );
 
-			Bindgen.spawn_local( async{ mb.start_local( col ).await; } ).expect_throw( "start column" );
+			spawn_local( async{ mb.start_local( col ).await; } );
 
 			children.insert( addr.id(), addr );
 		}
@@ -33,6 +34,7 @@ impl Columns
 			container,
 			children ,
 			last_text: None,
+			addr_columns,
 		}
 	}
 
@@ -59,7 +61,7 @@ impl Handler<AddColumn> for Columns
 	#[async_fn_nosend] fn handle_local( &mut self, _msg: AddColumn )
 	{
 		let (mut addr, mb) = Addr::builder().build();
-		let col        = Column::new( self.container.clone(), addr.id() );
+		let col        = Column::new( self.container.clone(), addr.clone(), self.addr_columns.clone() );
 
 		Bindgen.spawn_local( async{ mb.start_local( col ).await; } ).expect_throw( "start column" );
 
@@ -121,6 +123,22 @@ impl Handler<SetText> for Columns
 	}
 
 	#[async_fn] fn handle( &mut self, _msg: SetText )
+	{
+		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
+	}
+}
+
+
+
+
+impl Handler<DelColumn> for Columns
+{
+	#[async_fn_nosend] fn handle_local( &mut self, msg: DelColumn )
+	{
+		self.children.remove( &msg.id );
+	}
+
+	#[async_fn] fn handle( &mut self, _msg: DelColumn )
 	{
 		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
 	}

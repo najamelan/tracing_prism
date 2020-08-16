@@ -1,11 +1,11 @@
 # Auto-generated from "Cargo.yml"
 [dependencies]
-console_log = "^0.2"
 futures = "^0.3"
 gloo-events = "^0.1"
 log = "^0.4"
 wasm-bindgen = "^0.2"
 wasm-bindgen-futures = "^0.4"
+wasm-logger = "^0.2"
 
 [dependencies.async_executors]
 features = ["bindgen"]
