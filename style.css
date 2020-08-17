@@ -77,4 +77,15 @@ body
 	flex:1;
 }
 
+.toggle-button
+{
+	font-weight: bold;
+}
+
+.toggle-button.hide
+{
+	font-weight: normal;
+}
+
+
 

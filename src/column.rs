@@ -9,6 +9,12 @@ pub struct Column
 	container: HtmlElement   ,
 	columns  : Addr<Columns> ,
 	addr     : Addr<Self>    ,
+	filter   : String        ,
+	trace    : bool          ,
+	debug    : bool          ,
+	info     : bool          ,
+	warn     : bool          ,
+	error    : bool          ,
 }
 
 
@@ -19,7 +25,33 @@ impl Column
 		let container: HtmlElement = document().create_element( "div" ).expect_throw( "create div" ).unchecked_into();
 		container.set_class_name( "column" );
 
-		Self { parent, container, addr, columns }
+		Self
+		{
+			parent                ,
+			container             ,
+			addr                  ,
+			columns               ,
+			filter: String::new() ,
+			trace : true          ,
+			debug : true          ,
+			info  : true          ,
+			warn  : true          ,
+			error : true          ,
+		}
+	}
+
+
+	pub fn find( &self, selector: &str ) -> HtmlElement
+	{
+		let expect = format!( "find {}", &selector );
+
+		self.container
+
+			.query_selector( selector )
+			.expect_throw( &expect )
+			.expect_throw( &expect )
+			.unchecked_into()
+
 	}
 
 
@@ -29,50 +61,45 @@ impl Column
 	}
 
 
-	async fn on_filter( self, mut evts: impl Stream< Item=Event > + Unpin )
+	async fn on_filter( evts: impl Stream< Item=Event > + Unpin, column: Addr<Column> )
 	{
-		info!( "in on_filter" );
-
-		while let Some(_) = evts.next().await
-		{
-			if self.logview().is_some()
-			{
-				debug!( "filtering" );
-				self.filter_text()
-			}
-		}
+		evts.map( |_| Ok( ChangeFilter ) ).forward( column ).await.expect_throw( "send ChangeFilter" );
 	}
 
 
-	fn filter_text( &self )
+	async fn on_trace( evts: impl Stream< Item=Event > + Unpin, column: Addr<Column> )
 	{
-
-		let filter: HtmlInputElement = self.container.query_selector( ".filter-input" ).expect_throw( "select filter-input" ).expect_throw( "find fiter-input" ).unchecked_into();
-
-		let filter = filter.value();
-
-		let children = self.logview().expect_throw( "have logview" ).children();
-
-		let mut i = 0;
+		evts.map( |_| Ok( ToggleTrace ) ).forward( column ).await.expect_throw( "send ToggleTrace" );
+	}
 
 
-		while i < children.length()
-		{
-			let p: HtmlElement = children.item( i ).expect_throw( "get p" ).unchecked_into();
-			let text = p.text_content().expect_throw( "text_content" ).to_lowercase();
+	async fn on_debug( evts: impl Stream< Item=Event > + Unpin, column: Addr<Column> )
+	{
+		evts.map( |_| Ok( ToggleDebug ) ).forward( column ).await.expect_throw( "send ToggleDebug" );
+	}
 
-			if text.contains( &filter.to_lowercase() )
-			{
-				p.style().set_property( "visibility", "visible" ).expect_throw( "set visibility" );
-			}
 
-			else
-			{
-				p.style().set_property( "visibility", "hidden" ).expect_throw( "set visibility" );
-			}
+	async fn on_info( evts: impl Stream< Item=Event > + Unpin, column: Addr<Column> )
+	{
+		evts.map( |_| Ok( ToggleInfo ) ).forward( column ).await.expect_throw( "send ToggleInfo" );
+	}
 
-			i += 1;
-		}
+
+	async fn on_warn( evts: impl Stream< Item=Event > + Unpin, column: Addr<Column> )
+	{
+		evts.map( |_| Ok( ToggleWarn ) ).forward( column ).await.expect_throw( "send ToggleWarn" );
+	}
+
+
+	async fn on_error( evts: impl Stream< Item=Event > + Unpin, column: Addr<Column> )
+	{
+		evts.map( |_| Ok( ToggleError ) ).forward( column ).await.expect_throw( "send ToggleError" );
+	}
+
+
+	async fn on_collapse( evts: impl Stream< Item=Event > + Unpin, column: Addr<Column> )
+	{
+		evts.map( |_| Ok( Collapse ) ).forward( column ).await.expect_throw( "send Collapse" );
 	}
 
 
@@ -87,18 +114,47 @@ impl Column
 	}
 
 
-	async fn on_collapse
-	(
-		evts: impl Stream< Item=Event > + Unpin ,
-		column: Addr<Column>,
-	)
+	fn filter_text( &self )
 	{
-		evts
+		let children = self.find( ".logview" ).children();
 
-			.map( |_| Ok( Collapse ) )
-			.forward( column ).await
-			.expect_throw( "send Collapse" )
-		;
+		let mut i = 0;
+
+
+		while i < children.length()
+		{
+			let p: HtmlElement = children.item( i ).expect_throw( "get p" ).unchecked_into();
+			let text = p.text_content().expect_throw( "text_content" ).to_lowercase();
+			let mut hide = false;
+
+
+			if !self.filter.is_empty() && !text.contains( &self.filter )
+			{
+				hide = true;
+			}
+
+
+			// TODO: verify rust does lazy evaluation of conditions.
+			//
+			if !self.trace && text.contains( "trace" ) { hide = true; }
+			if !self.debug && text.contains( "debug" ) { hide = true; }
+			if !self.info  && text.contains( "info"  ) { hide = true; }
+			if !self.warn  && text.contains( "warn"  ) { hide = true; }
+			if !self.error && text.contains( "error" ) { hide = true; }
+
+
+			if hide
+			{
+				p.style().set_property( "visibility", "hidden" ).expect_throw( "hide line" );
+			}
+
+			else
+			{
+				p.style().set_property( "visibility", "visible" ).expect_throw( "show line" );
+			}
+
+			i += 1;
+		}
 	}
 }
 
@@ -124,7 +180,7 @@ impl Handler<TextBlock> for Column
 		// add the new one
 		// filter the new one.
 
-		if let Some(elem) = self.container.query_selector( ".logview" ).expect_throw( "use query_selector" )
+		if let Some(elem) = self.logview()
 		{
 			// Hopefully leak a bit less memory:
 			// https://stackoverflow.com/a/3785323
@@ -139,7 +195,7 @@ impl Handler<TextBlock> for Column
 
 		// set display none if column is collapsed.
 		//
-		let controls: HtmlElement = self.container.query_selector( ".col-controls" ).expect_throw( "get col-controls" ).expect_throw( "get col-controls" ).unchecked_into();
+		let controls = self.find( ".col-controls" );
 
 
 		if controls.class_list().contains( "collapsed" )
@@ -165,7 +221,7 @@ impl Handler<Render> for Column
 {
 	#[async_fn_nosend] fn handle_local( &mut self, _msg: Render )
 	{
-		let controls: HtmlElement = document().query_selector( ".col-controls" )
+		let controls: HtmlElement = document().query_selector( ".col-controls.template" )
 
 			.expect_throw( "find col-controls" )
 			.expect_throw( "find col-controls" )
@@ -176,30 +232,61 @@ impl Handler<Render> for Column
 
 		controls.set_class_name( "col-controls" );
 
-		let filter = controls.query_selector( ".filter-input" ).expect_throw( "find filter input" ).expect_throw( "find filter input" );
-
-		let filter_evts = EHandler::new( &filter, "input", false );
-
 
 		self.container.append_child( &controls       ).expect_throw( "append filter" );
 		self.parent   .append_child( &self.container ).expect_throw( "append column" );
 
-		spawn_local( Self::on_filter( self.clone(), filter_evts ) );
-
 
 		// Set event listeners on buttons
 		//
-		let del_col = self.container.query_selector( ".button-close" ).expect_throw( "get close button" ).expect_throw( "get close button" );
+		let filter      = self.find( ".filter-input" );
+		let filter_evts = EHandler::new( &filter, "input", false );
+
+		spawn_local( Column::on_filter( filter_evts, self.addr.clone() ) );
+
+
+		let trace_but  = self.find( ".button-trace" );
+		let trace_evts = EHandler::new( &trace_but, "click", false );
+
+		spawn_local( Column::on_trace( trace_evts, self.addr.clone() ) );
+
+
+		let debug_but  = self.find( ".button-debug" );
+		let debug_evts = EHandler::new( &debug_but, "click", false );
+
+		spawn_local( Column::on_debug( debug_evts, self.addr.clone() ) );
+
+
+		let info_but  = self.find( ".button-info" );
+		let info_evts = EHandler::new( &info_but, "click", false );
+
+		spawn_local( Column::on_info( info_evts, self.addr.clone() ) );
+
+
+		let warn_but  = self.find( ".button-warn" );
+		let warn_evts = EHandler::new( &warn_but, "click", false );
+
+		spawn_local( Column::on_warn( warn_evts, self.addr.clone() ) );
+
+
+		let error_but  = self.find( ".button-error" );
+		let error_evts = EHandler::new( &error_but, "click", false );
+
+		spawn_local( Column::on_error( error_evts, self.addr.clone() ) );
+
+
+		let del_col  = self.find( ".button-close" );
 		let del_evts = EHandler::new( &del_col, "click", false );
 
 		spawn_local( Column::on_delcol( del_evts, self.addr.clone() ) );
 
 
-		let collapse = self.container.query_selector( ".button-collapse" ).expect_throw( "get collapse button" ).expect_throw( "get collapse button" );
+		let collapse      = self.find( ".button-collapse" );
 		let collapse_evts = EHandler::new( &collapse, "click", false );
 
 		spawn_local( Column::on_collapse( collapse_evts, self.addr.clone() ) );
 	}
+
 
 	#[async_fn] fn handle( &mut self, _msg: Render )
 	{
@@ -245,12 +332,12 @@ impl Handler<Collapse> for Column
 	{
 		// turn controls sideways
 		//
-		let controls: HtmlElement = self.container.query_selector( ".col-controls" ).expect_throw( "get col-controls" ).expect_throw( "get col-controls" ).unchecked_into();
+		let controls = self.find( ".col-controls" );
 
 
 		if controls.class_list().contains( "collapsed" )
 		{
-			controls.class_list().remove_1( "collapsed" ).expect_throw( "add collapsed class" );
+			controls.class_list().remove_1( "collapsed" ).expect_throw( "remove collapsed class" );
 
 			// set with of column to height of controls
 			//
@@ -259,7 +346,7 @@ impl Handler<Collapse> for Column
 
 			if let Some( logview ) = self.logview()
 			{
-				logview.style().set_property( "display", "block" ).expect_throw( "set display none" );
+				logview.style().set_property( "display", "block" ).expect_throw( "set display block" );
 			}
 		}
 
@@ -269,7 +356,7 @@ impl Handler<Collapse> for Column
 
 			// set with of column to height of controls
 			//
-			let width  = controls.get_bounding_client_rect().width();
+			let width = controls.get_bounding_client_rect().width();
 			self.container.style().set_property( "width", &format!( "{}", width ) ).expect_throw( "set width" );
 
 
@@ -278,11 +365,229 @@ impl Handler<Collapse> for Column
 				logview.style().set_property( "display", "none" ).expect_throw( "set display none" );
 			}
 		}
-
-
 	}
 
+
 	#[async_fn] fn handle( &mut self, _msg: Collapse )
+	{
+		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
+	}
+}
+
+
+
+pub struct ChangeFilter;
+
+impl Message for ChangeFilter { type Return = (); }
+
+
+impl Handler<ChangeFilter> for Column
+{
+	#[async_fn_nosend] fn handle_local( &mut self, _msg: ChangeFilter )
+	{
+		let filter: HtmlInputElement = self.find( ".filter-input" ).unchecked_into();
+
+		self.filter = filter.value().to_lowercase();
+
+
+		if self.logview().is_some()
+		{
+			self.filter_text();
+		}
+	}
+
+
+	#[async_fn] fn handle( &mut self, _msg: ChangeFilter )
+	{
+		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
+	}
+}
+
+
+
+pub struct ToggleTrace;
+
+impl Message for ToggleTrace { type Return = (); }
+
+
+impl Handler<ToggleTrace> for Column
+{
+	#[async_fn_nosend] fn handle_local( &mut self, _msg: ToggleTrace )
+	{
+		self.trace = !self.trace;
+
+		if self.logview().is_some()
+		{
+			self.filter_text();
+		}
+
+		let button = self.find( ".button-trace" );
+
+		if self.trace
+		{
+			button.class_list().remove_1( "hide" ).expect_throw( "remove hide from button-trace" );
+		}
+
+		else
+		{
+			button.class_list().add_1( "hide" ).expect_throw( "add hide to button-trace" );
+		}
+	}
+
+
+	#[async_fn] fn handle( &mut self, _msg: ToggleTrace )
+	{
+		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
+	}
+}
+
+
+
+pub struct ToggleDebug;
+
+impl Message for ToggleDebug { type Return = (); }
+
+
+impl Handler<ToggleDebug> for Column
+{
+	#[async_fn_nosend] fn handle_local( &mut self, _msg: ToggleDebug )
+	{
+		self.debug = !self.debug;
+
+		if self.logview().is_some()
+		{
+			self.filter_text();
+		}
+
+		let button = self.find( ".button-debug" );
+
+		if self.debug
+		{
+			button.class_list().remove_1( "hide" ).expect_throw( "remove hide from button-debug" );
+		}
+
+		else
+		{
+			button.class_list().add_1( "hide" ).expect_throw( "add hide to button-debug" );
+		}
+	}
+
+
+	#[async_fn] fn handle( &mut self, _msg: ToggleDebug )
+	{
+		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
+	}
+}
+
+
+
+pub struct ToggleInfo;
+
+impl Message for ToggleInfo { type Return = (); }
+
+
+impl Handler<ToggleInfo> for Column
+{
+	#[async_fn_nosend] fn handle_local( &mut self, _msg: ToggleInfo )
+	{
+		self.info = !self.info;
+
+		if self.logview().is_some()
+		{
+			self.filter_text();
+		}
+
+		let button = self.find( ".button-info" );
+
+		if self.info
+		{
+			button.class_list().remove_1( "hide" ).expect_throw( "remove hide from button-info" );
+		}
+
+		else
+		{
+			button.class_list().add_1( "hide" ).expect_throw( "add hide to button-info" );
+		}
+	}
+
+
+	#[async_fn] fn handle( &mut self, _msg: ToggleInfo )
+	{
+		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
+	}
+}
+
+
+
+pub struct ToggleWarn;
+
+impl Message for ToggleWarn { type Return = (); }
+
+
+impl Handler<ToggleWarn> for Column
+{
+	#[async_fn_nosend] fn handle_local( &mut self, _msg: ToggleWarn )
+	{
+		self.warn = !self.warn;
+
+		if self.logview().is_some()
+		{
+			self.filter_text();
+		}
+
+		let button = self.find( ".button-warn" );
+
+		if self.warn
+		{
+			button.class_list().remove_1( "hide" ).expect_throw( "remove hide from button-warn" );
+		}
+
+		else
+		{
+			button.class_list().add_1( "hide" ).expect_throw( "add hide to button-warn" );
+		}
+	}
+
+
+	#[async_fn] fn handle( &mut self, _msg: ToggleWarn )
+	{
+		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
+	}
+}
+
+
+
+pub struct ToggleError;
+
+impl Message for ToggleError { type Return = (); }
+
+
+impl Handler<ToggleError> for Column
+{
+	#[async_fn_nosend] fn handle_local( &mut self, _msg: ToggleError )
+	{
+		self.error = !self.error;
+
+		if self.logview().is_some()
+		{
+			self.filter_text();
+		}
+
+		let button = self.find( ".button-error" );
+
+		if self.error
+		{
+			button.class_list().remove_1( "hide" ).expect_throw( "remove hide from button-error" );
+		}
+
+		else
+		{
+			button.class_list().add_1( "hide" ).expect_throw( "add hide to button-error" );
+		}
+	}
+
+
+	#[async_fn] fn handle( &mut self, _msg: ToggleError )
 	{
 		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
 	}

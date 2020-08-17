@@ -21,7 +21,6 @@ mod import
 		futures         :: { task::LocalSpawnExt } ,
 		std             :: { task::*, pin::Pin, panic, collections::HashMap  } ,
 		wasm_bindgen_futures :: { spawn_local, JsFuture                      } ,
-
 	};
 }
 
