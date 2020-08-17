@@ -30,16 +30,18 @@ dependencies:
 
     features :
     [
+      Blob,
       console     ,
       CssStyleDeclaration,
       Document    ,
+      DomRect    ,
+      DomTokenList,
       Element     ,
-      HtmlElement ,
+      File,
+      FileList,
       HtmlCollection ,
+      HtmlElement ,
+      HtmlInputElement,
       Node        ,
       Window      ,
-      HtmlInputElement,
-      FileList,
-      File,
-      Blob,
     ]

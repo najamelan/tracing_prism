@@ -85,6 +85,21 @@ impl Column
 		evts.next().await;
 		column.send( DelColumn{ id: column.id() } ).await.expect_throw( "send DelColumn" );
 	}
+
+
+	async fn on_collapse
+	(
+		evts: impl Stream< Item=Event > + Unpin ,
+		column: Addr<Column>,
+	)
+	{
+		evts
+
+			.map( |_| Ok( Collapse ) )
+			.forward( column ).await
+			.expect_throw( "send Collapse" )
+		;
+	}
 }
 
 
@@ -121,6 +136,16 @@ impl Handler<TextBlock> for Column
 
 		self.container.append_child( &msg.block ).expect_throw( "append div" );
 		self.filter_text();
+
+		// set display none if column is collapsed.
+		//
+		let controls: HtmlElement = self.container.query_selector( ".col-controls" ).expect_throw( "get col-controls" ).expect_throw( "get col-controls" ).unchecked_into();
+
+
+		if controls.class_list().contains( "collapsed" )
+		{
+			msg.block.style().set_property( "display", "none" ).expect_throw( "set display none" );
+		}
 	}
 
 	#[async_fn] fn handle( &mut self, _msg: TextBlock )
@@ -149,7 +174,7 @@ impl Handler<Render> for Column
 			.unchecked_into()
 		;
 
-		controls.set_class_name( "" );
+		controls.set_class_name( "col-controls" );
 
 		let filter = controls.query_selector( ".filter-input" ).expect_throw( "find filter input" ).expect_throw( "find filter input" );
 
@@ -162,10 +187,18 @@ impl Handler<Render> for Column
 		spawn_local( Self::on_filter( self.clone(), filter_evts ) );
 
 
+		// Set event listeners on buttons
+		//
 		let del_col = self.container.query_selector( ".button-close" ).expect_throw( "get close button" ).expect_throw( "get close button" );
 		let del_evts = EHandler::new( &del_col, "click", false );
 
 		spawn_local( Column::on_delcol( del_evts, self.addr.clone() ) );
+
+
+		let collapse = self.container.query_selector( ".button-collapse" ).expect_throw( "get collapse button" ).expect_throw( "get collapse button" );
+		let collapse_evts = EHandler::new( &collapse, "click", false );
+
+		spawn_local( Column::on_collapse( collapse_evts, self.addr.clone() ) );
 	}
 
 	#[async_fn] fn handle( &mut self, _msg: Render )
@@ -194,6 +227,62 @@ impl Handler<DelColumn> for Column
 	}
 
 	#[async_fn] fn handle( &mut self, _msg: DelColumn )
+	{
+		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
+	}
+}
+
+
+
+pub struct Collapse;
+
+impl Message for Collapse { type Return = (); }
+
+
+impl Handler<Collapse> for Column
+{
+	#[async_fn_nosend] fn handle_local( &mut self, _msg: Collapse )
+	{
+		// turn controls sideways
+		//
+		let controls: HtmlElement = self.container.query_selector( ".col-controls" ).expect_throw( "get col-controls" ).expect_throw( "get col-controls" ).unchecked_into();
+
+
+		if controls.class_list().contains( "collapsed" )
+		{
+			controls.class_list().remove_1( "collapsed" ).expect_throw( "add collapsed class" );
+
+			// set with of column to height of controls
+			//
+			self.container.style().set_property( "width", "auto" ).expect_throw( "set width" );
+
+
+			if let Some( logview ) = self.logview()
+			{
+				logview.style().set_property( "display", "block" ).expect_throw( "set display none" );
+			}
+		}
+
+		else
+		{
+			controls.class_list().add_1( "collapsed" ).expect_throw( "add collapsed class" );
+
+			// set with of column to height of controls
+			//
+			let width  = controls.get_bounding_client_rect().width();
+			self.container.style().set_property( "width", &format!( "{}", width ) ).expect_throw( "set width" );
+
+
+			if let Some( logview ) = self.logview()
+			{
+				logview.style().set_property( "display", "none" ).expect_throw( "set display none" );
+			}
+		}
+
+
+	}
+
+	#[async_fn] fn handle( &mut self, _msg: Collapse )
 	{
 		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
 	}
