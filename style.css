@@ -69,6 +69,8 @@ body
 {
 	white-space: nowrap;
 	display: flex;
+	position: sticky;
+	top: 0;
 }
 
 
