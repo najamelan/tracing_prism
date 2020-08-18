@@ -1,54 +1,62 @@
-
-
-
 body
 {
 	display: grid;
 	height: 100%;
 	grid-template-rows: auto minmax(0, 1fr);
+	margin: 0;
+	font-family: Montserrat, verdana;
 }
 
-.template
+.template, .template *
 {
 	display: none;
 }
 
-.template *
+#header
 {
-	display: none;
+	border-bottom-width: thin;
+	border-bottom-style: solid;
+	padding: 0 1vw;
 }
-
 
 #header > *
 {
 	display: inline-block;
+	vertical-align: middle;
+}
+
+#header > h1
+{
+	margin: 0;
+	margin-right: 1vw;
+	font-weight: normal;
 }
 
 
 #controls *
 {
 	display: inline-block;
+	margin-right: 1vw;
 }
 
 
 .column
 {
-	border: dashed 1px black;
 	padding: .5vw;
 }
 
 
-.column div
+.logview
 {
-	border: dashed 1px black;
-	padding: .5vw;
+	padding-top: 2vh;
 }
 
 
 .column div p
 {
 	margin: 0;
-	font-family: monospace;
+	font-family: "Source Code Pro", Consolas, monospace;
+	font-size: .6vh;
 }
 
 
@@ -56,6 +64,7 @@ body
 {
 	display: grid;
 	grid-auto-flow: column;
+	grid-gap: 0.3vw;
 }
 
 

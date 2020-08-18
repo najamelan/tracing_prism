@@ -43,20 +43,11 @@ pub async fn main()
 {
 	wasm_logger::init( wasm_logger::Config::default() );
 
-	// // start new actor
-	// //
-	// let     a    = MyActor { count: 10, phantom: PhantomData };
-	// let mut exec = Bindgen{};
-	// let mut addr = Addr::builder().start( MyActor, &exec ).expect( "create addres for MyActor" );
-
-	// // send message and get future for result
-	// //
-	// let res = addr.call( Ping(5) ).await.expect( "Send Ping" );
 
 	let window   = web_sys::window  ().expect_throw( "no global `window` exists"        );
 	let document = window  .document().expect_throw( "should have a document on window" );
-	// let body     = document.body    ().expect_throw( "document should have a body"      );
-	//
+
+
 	let upload = get_id( "upload" );
 
 	let file_evts = EHandler::new( &upload, "change", false );

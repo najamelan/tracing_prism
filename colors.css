@@ -1,0 +1,42 @@
+/* dark theme */
+
+:root
+{
+	--background: #0f1319;
+	--bg-darker : #090c12;
+	--keyword   : #ff8f2d;
+	--function  : #39bae6;
+	--sel-bg    : #B3B1AD;
+	--string    : #C2D94C;
+	--operator  : #F29668;
+	--entity    : #59C2FF;
+	--comment   : #626A73;
+	--foreground: #fff   ;
+}
+
+
+@media (prefers-color-scheme: light)
+{
+	:root
+	{
+		--bg-color: black;
+	}
+}
+
+
+body, html
+{
+	background: var( --background );
+	color     : var( --foreground );
+}
+
+
+#header
+{
+  border-bottom-color: var( --foreground );
+}
+
+.column
+{
+	background: var( --bg-darker );
+}
