@@ -74,6 +74,13 @@ body
 }
 
 
+.collapsed .filter-input
+{
+	width: 100%;
+	max-height: 50vh;
+}
+
+
 .col-controls
 {
 	white-space: nowrap;

@@ -1,6 +1,18 @@
 use crate::{ *, import::*, column::Column };
 
 
+
+pub enum LogLevel
+{
+	Trace,
+	Debug,
+	Info,
+	Warn,
+	Error,
+	Unknown,
+}
+
+
 #[ derive( Actor ) ]
 //
 pub struct Columns
@@ -45,6 +57,17 @@ impl Columns
 		{
 			child.send( Render{} ).await.expect_throw( "send Render to column" );
 		}
+	}
+
+
+	pub fn loglevel( line: &str ) -> LogLevel
+	{
+		     if line.contains( " TRACE " ) { LogLevel::Trace   }
+		else if line.contains( " DEBUG " ) { LogLevel::Debug   }
+		else if line.contains( " INFO "  ) { LogLevel::Info    }
+		else if line.contains( " WARN "  ) { LogLevel::Warn    }
+		else if line.contains( " ERROR " ) { LogLevel::Error   }
+		else                               { LogLevel::Unknown }
 	}
 }
 
@@ -101,14 +124,28 @@ impl Handler<SetText> for Columns
 	#[async_fn_nosend] fn handle_local( &mut self, msg: SetText )
 	{
 		let block: HtmlElement = document().create_element( "div" ).expect_throw( "create div tag" ).unchecked_into();
+		block.set_class_name( "logview" );
+
 
 		for line in msg.text.lines()
 		{
 			let p: HtmlElement = document().create_element( "p" ).expect_throw( "create p tag" ).unchecked_into();
+
+			let class = match Self::loglevel( &line )
+			{
+				LogLevel::Trace   => "trace"          ,
+				LogLevel::Debug   => "debug"          ,
+				LogLevel::Info    => "info"           ,
+				LogLevel::Warn    => "warn"           ,
+				LogLevel::Error   => "error"          ,
+				LogLevel::Unknown => "unknown_loglvl" ,
+			};
+
+			p.class_list().add_1( class ).expect_throw( "add class to p" );
 			p.set_inner_text( line );
 			block.append_child( &p ).expect_throw( "append p" );
-			block.set_class_name( "logview" );
 		}
+
 
 		for child in &mut self.children.values_mut()
 		{
