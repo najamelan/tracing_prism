@@ -1,0 +1,109 @@
+body
+{
+	display: grid;
+	height: 100%;
+	grid-template-rows: auto minmax(0, 1fr);
+	margin: 0;
+	font-family: Montserrat, verdana;
+}
+
+.template, .template *
+{
+	display: none;
+}
+
+#header
+{
+	border-bottom-width: thin;
+	border-bottom-style: solid;
+	padding: 0 1vw;
+}
+
+#header > *
+{
+	display: inline-block;
+	vertical-align: middle;
+}
+
+#header > h1
+{
+	margin: 0;
+	margin-right: 1vw;
+	font-weight: normal;
+}
+
+
+#controls *
+{
+	display: inline-block;
+	margin-right: 1vw;
+}
+
+
+.column
+{
+	padding: .5vw;
+}
+
+
+.logview
+{
+	padding-top: 2vh;
+}
+
+
+.column div p
+{
+	margin: 0;
+	font-family: "Source Code Pro", Consolas, monospace;
+	font-size: .6vh;
+}
+
+
+#columns
+{
+	display: grid;
+	grid-auto-flow: column;
+	grid-gap: 0.3vw;
+}
+
+
+.col-controls.collapsed
+{
+	writing-mode: vertical-lr;
+}
+
+
+.collapsed .filter-input
+{
+	width: 100%;
+	max-height: 50vh;
+}
+
+
+.col-controls
+{
+	white-space: nowrap;
+	display: flex;
+	position: sticky;
+	top: 0;
+}
+
+
+.filter-input
+{
+	flex:1;
+}
+
+.toggle-button
+{
+	font-weight: bold;
+}
+
+.toggle-button.hide
+{
+	font-weight: normal;
+}
+
+
+
