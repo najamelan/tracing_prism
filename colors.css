@@ -12,6 +12,7 @@
 	--entity    : #59C2FF;
 	--comment   : #626A73;
 	--foreground: #fff   ;
+	--input     : black  ;
 }
 
 
@@ -26,8 +27,8 @@
 
 body, html
 {
-	background: var( --background );
-	color     : var( --foreground );
+	background: var( --background ) !important;
+	color     : var( --foreground ) !important;
 }
 
 
@@ -36,9 +37,31 @@ body, html
   border-bottom-color: var( --foreground );
 }
 
+#upload
+{
+	background: var( --background );
+	color: var( --foreground );
+}
+
 .column
 {
 	background: var( --bg-darker );
+}
+
+button
+{
+	background: var( --background );
+	color: var( --foreground );
+	border-color: var( --comment );
+	margin-right: 1px;
+}
+
+.filter-input
+{
+	background: var( --input );
+	color: var( --foreground );
+	border-color: var( --comment );
+	margin-right: 1px;
 }
 
 
