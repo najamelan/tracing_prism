@@ -84,7 +84,7 @@ impl Handler<AddColumn> for Columns
 	#[async_fn_nosend] fn handle_local( &mut self, _msg: AddColumn )
 	{
 		let (mut addr, mb) = Addr::builder().build();
-		let col        = Column::new( self.container.clone(), addr.clone(), self.addr_columns.clone() );
+		let col            = Column::new( self.container.clone(), addr.clone(), self.addr_columns.clone() );
 
 		Bindgen.spawn_local( async{ mb.start_local( col ).await; } ).expect_throw( "start column" );
 

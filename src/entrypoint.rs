@@ -65,7 +65,7 @@ pub async fn main()
 	spawn_local( async{ mb_columns.start_local( columns ).await; } );
 
 	spawn_local( on_upload( file_evts, addr_columns.clone() ) );
-	spawn_local( on_addcol( add_evts, addr_columns ) );
+	spawn_local( on_addcol( add_evts , addr_columns         ) );
 }
 
 
