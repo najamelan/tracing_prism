@@ -81,7 +81,7 @@ impl Message for AddColumn { type Return = (); }
 
 impl Handler<AddColumn> for Columns
 {
-	#[async_fn_nosend] fn handle_local( &mut self, _msg: AddColumn )
+	#[async_fn_local] fn handle_local( &mut self, _msg: AddColumn )
 	{
 		let (mut addr, mb) = Addr::builder().build();
 		let col            = Column::new( self.container.clone(), addr.clone(), self.addr_columns.clone() );
@@ -121,7 +121,7 @@ impl Message for SetText { type Return = (); }
 
 impl Handler<SetText> for Columns
 {
-	#[async_fn_nosend] fn handle_local( &mut self, msg: SetText )
+	#[async_fn_local] fn handle_local( &mut self, msg: SetText )
 	{
 		let block: HtmlElement = document().create_element( "div" ).expect_throw( "create div tag" ).unchecked_into();
 		block.set_class_name( "logview" );
@@ -170,7 +170,7 @@ impl Handler<SetText> for Columns
 
 impl Handler<DelColumn> for Columns
 {
-	#[async_fn_nosend] fn handle_local( &mut self, msg: DelColumn )
+	#[async_fn_local] fn handle_local( &mut self, msg: DelColumn )
 	{
 		self.children.remove( &msg.id );
 	}

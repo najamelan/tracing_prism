@@ -174,7 +174,7 @@ impl Message for TextBlock { type Return = (); }
 
 impl Handler<TextBlock> for Column
 {
-	#[async_fn_nosend] fn handle_local( &mut self, msg: TextBlock )
+	#[async_fn_local] fn handle_local( &mut self, msg: TextBlock )
 	{
 		// if the element exists, remove it
 		// add the new one
@@ -219,7 +219,7 @@ impl Message for Render { type Return = (); }
 
 impl Handler<Render> for Column
 {
-	#[async_fn_nosend] fn handle_local( &mut self, _msg: Render )
+	#[async_fn_local] fn handle_local( &mut self, _msg: Render )
 	{
 		let controls: HtmlElement = document().query_selector( ".col-controls.template" )
 
@@ -306,7 +306,7 @@ impl Message for DelColumn { type Return = (); }
 
 impl Handler<DelColumn> for Column
 {
-	#[async_fn_nosend] fn handle_local( &mut self, msg: DelColumn )
+	#[async_fn_local] fn handle_local( &mut self, msg: DelColumn )
 	{
 		self.container.set_inner_html( "" );
 		self.container.remove();
@@ -328,7 +328,7 @@ impl Message for Collapse { type Return = (); }
 
 impl Handler<Collapse> for Column
 {
-	#[async_fn_nosend] fn handle_local( &mut self, _msg: Collapse )
+	#[async_fn_local] fn handle_local( &mut self, _msg: Collapse )
 	{
 		// turn controls sideways
 		//
@@ -383,7 +383,7 @@ impl Message for ChangeFilter { type Return = (); }
 
 impl Handler<ChangeFilter> for Column
 {
-	#[async_fn_nosend] fn handle_local( &mut self, _msg: ChangeFilter )
+	#[async_fn_local] fn handle_local( &mut self, _msg: ChangeFilter )
 	{
 		let filter: HtmlInputElement = self.find( ".filter-input" ).unchecked_into();
 
@@ -412,7 +412,7 @@ impl Message for ToggleTrace { type Return = (); }
 
 impl Handler<ToggleTrace> for Column
 {
-	#[async_fn_nosend] fn handle_local( &mut self, _msg: ToggleTrace )
+	#[async_fn_local] fn handle_local( &mut self, _msg: ToggleTrace )
 	{
 		self.trace = !self.trace;
 
@@ -450,7 +450,7 @@ impl Message for ToggleDebug { type Return = (); }
 
 impl Handler<ToggleDebug> for Column
 {
-	#[async_fn_nosend] fn handle_local( &mut self, _msg: ToggleDebug )
+	#[async_fn_local] fn handle_local( &mut self, _msg: ToggleDebug )
 	{
 		self.debug = !self.debug;
 
@@ -488,7 +488,7 @@ impl Message for ToggleInfo { type Return = (); }
 
 impl Handler<ToggleInfo> for Column
 {
-	#[async_fn_nosend] fn handle_local( &mut self, _msg: ToggleInfo )
+	#[async_fn_local] fn handle_local( &mut self, _msg: ToggleInfo )
 	{
 		self.info = !self.info;
 
@@ -526,7 +526,7 @@ impl Message for ToggleWarn { type Return = (); }
 
 impl Handler<ToggleWarn> for Column
 {
-	#[async_fn_nosend] fn handle_local( &mut self, _msg: ToggleWarn )
+	#[async_fn_local] fn handle_local( &mut self, _msg: ToggleWarn )
 	{
 		self.warn = !self.warn;
 
@@ -564,7 +564,7 @@ impl Message for ToggleError { type Return = (); }
 
 impl Handler<ToggleError> for Column
 {
-	#[async_fn_nosend] fn handle_local( &mut self, _msg: ToggleError )
+	#[async_fn_local] fn handle_local( &mut self, _msg: ToggleError )
 	{
 		self.error = !self.error;
 

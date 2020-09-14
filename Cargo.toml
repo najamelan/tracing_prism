@@ -12,11 +12,11 @@ features = ["bindgen"]
 version = "^0.3"
 
 [dependencies.thespis]
-path = "../thespis/thespis"
+version = "0.1.0-alpha"
 
 [dependencies.thespis_impl]
 features = []
-path = "../thespis/thespis_impl"
+version = "0.1.0-alpha"
 
 [dependencies.web-sys]
 features = ["Blob", "console", "CssStyleDeclaration", "Document", "DomRect", "DomTokenList", "Element", "File", "FileList", "HtmlCollection", "HtmlElement", "HtmlInputElement", "Node", "Window"]
