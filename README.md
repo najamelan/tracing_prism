@@ -15,9 +15,19 @@ It's in an early stage of development. The plan is to support json input, which 
 
 # Contributing
 
-For the moment, as the project is still in development and will still change a lot, it's probably not that useful to take contributions. On top of that it uses libraries which aren't yet published on crates.io. However if you have ideas/questions, feel free to open an issue to discuss.
+For the moment, as the project is still in development and will still change a lot, it's probably not that useful to take contributions. However if you have ideas/questions, feel free to open an issue to discuss.
 
 If you find this useful and want me to speed up development, feel free to star the repository so I know someone cares. In any case, I am developping this because I need to be able to read my logs properly, so I will continue the project.
+
+
+## Compilation
+
+1. Make sure you have Rust and wasm-pack installed.
+2. `git clone https://github.com/najamelan/tracing_prism`
+3. `cd tracing_prism`
+4. `wasm-pack build --target web`
+5. Make sure your browser allows loading scripts on `file://` urls.
+6. Open `index.html`
 
 # TODO
 - when a line is hidden from all non-collapsed columns, remove the whitespace.
