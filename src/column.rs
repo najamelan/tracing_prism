@@ -5,8 +5,8 @@ use crate::{ import::*, * };
 //
 pub struct Column
 {
-	parent   : HtmlElement   ,
-	container: HtmlElement   ,
+	parent   : HtmlElement   , // #columns
+	container: HtmlElement   , // .column
 	columns  : Addr<Columns> ,
 	addr     : Addr<Self>    ,
 	filter   : String        ,
@@ -335,9 +335,9 @@ impl Handler<Collapse> for Column
 		let controls = self.find( ".col-controls" );
 
 
-		if controls.class_list().contains( "collapsed" )
+		if self.container.class_list().contains( "collapsed" )
 		{
-			controls.class_list().remove_1( "collapsed" ).expect_throw( "remove collapsed class" );
+			self.container.class_list().remove_1( "collapsed" ).expect_throw( "remove collapsed class" );
 
 			// set with of column to height of controls
 			//
@@ -352,7 +352,7 @@ impl Handler<Collapse> for Column
 
 		else
 		{
-			controls.class_list().add_1( "collapsed" ).expect_throw( "add collapsed class" );
+			self.container.class_list().add_1( "collapsed" ).expect_throw( "add collapsed class" );
 
 			// set with of column to height of controls
 			//

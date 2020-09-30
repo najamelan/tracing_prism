@@ -43,6 +43,7 @@ body
 .column
 {
 	padding: .5vw;
+	min-width: 18rem;
 }
 
 
@@ -64,19 +65,7 @@ body
 	display: grid;
 	grid-auto-flow: column;
 	grid-gap: 0.3vw;
-}
-
-
-.col-controls.collapsed
-{
-	writing-mode: vertical-lr;
-}
-
-
-.collapsed .filter-input
-{
-	width: 100%;
-	max-height: 50vh;
+	min-width: 0;
 }
 
 
@@ -86,13 +75,37 @@ body
 	display: flex;
 	position: sticky;
 	top: 0;
+	min-width: 5rem;
 }
 
 
 .filter-input
 {
 	flex:1;
+	min-width: 3rem;
 }
+
+
+.collapsed
+{
+	min-width: auto;
+}
+
+
+.collapsed .col-controls
+{
+	writing-mode: vertical-lr;
+	min-width: auto;
+}
+
+
+.collapsed .filter-input
+{
+	width: 100%;
+	max-height: 50vh;
+	min-width: auto;
+}
+
 
 .toggle-button
 {
