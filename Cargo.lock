@@ -295,8 +295,6 @@ dependencies = [
 [[package]]
 name = "thespis_impl"
 version = "0.1.0-alpha.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b25dd114951a4fca8a0b938d20709a7284fed95283992910fbf54edf1b0a240"
 dependencies = [
  "async_executors",
  "futures 0.3.5",

@@ -17,7 +17,7 @@ dependencies:
   log                 : ^0.4
   wasm-logger         : ^0.2
   thespis             : { version: 0.1.0-alpha               }
-  thespis_impl        : { version: 0.1.0-alpha, features: [] }
+  thespis_impl        : { path: ../thespis/thespis_impl, features: [] }
   futures             : ^0.3
   wasm-bindgen        : ^0.2
   wasm-bindgen-futures: ^0.4
@@ -45,3 +45,11 @@ dependencies:
       Node        ,
       Window      ,
     ]
+
+
+profile:
+
+  release:
+
+    lto: true
+    opt-level: 3

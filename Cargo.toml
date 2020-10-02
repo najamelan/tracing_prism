@@ -16,7 +16,7 @@ version = "0.1.0-alpha"
 
 [dependencies.thespis_impl]
 features = []
-version = "0.1.0-alpha"
+path = "../thespis/thespis_impl"
 
 [dependencies.web-sys]
 features = ["Blob", "console", "CssStyleDeclaration", "Document", "DomRect", "DomTokenList", "Element", "File", "FileList", "HtmlCollection", "HtmlElement", "HtmlInputElement", "Node", "Window"]
@@ -31,3 +31,8 @@ authors = ["Naja Melan <najamelan@autistici.org>"]
 edition = "2018"
 name = "tracing_prism"
 version = "0.1.0"
+
+[profile]
+[profile.release]
+lto = true
+opt-level = 3
