@@ -55,7 +55,7 @@ impl Entry
 			LogLevel::Info    => if !filter.info  { show = false } ,
 			LogLevel::Warn    => if !filter.warn  { show = false } ,
 			LogLevel::Error   => if !filter.error { show = false } ,
-			LogLevel::Unknown => show = false                      ,
+			LogLevel::Unknown => {} // always show
 		}
 
 		show
