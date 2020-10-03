@@ -254,3 +254,22 @@ impl Handler<Filter> for Control
 		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
 	}
 }
+
+
+
+
+impl Handler<DelColumn> for Control
+{
+	#[async_fn_local] fn handle_local( &mut self, msg: DelColumn )
+	{
+		self.columns.remove( &msg.id );
+		self.show   .remove( &msg.id );
+		self.filters.remove( &msg.id );
+	}
+
+	#[async_fn] fn handle( &mut self, _msg: DelColumn )
+	{
+		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
+	}
+}
+

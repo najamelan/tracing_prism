@@ -13,6 +13,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "async_nursery"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3664df024ea2229b15a9e6710925532209a5226e470b914f08b440851dacb80a"
+dependencies = [
+ "async_executors",
+ "futures 0.3.5",
+ "rustc_version",
+ "thiserror",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -307,12 +319,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "thiserror"
+version = "1.0.20"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7dfdd070ccd8ccb78f4ad66bf1982dc37f620ef696c6b5028fe2ed83dd3d0d08"
+dependencies = [
+ "thiserror-impl",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "1.0.20"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bd80fc12f73063ac132ac92aceea36734f04a1d93c1240c6944e23a3b8841793"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "tracing"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6d79ca061b032d6ce30c660fded31189ca0b9922bf483cd70759f13a2d86786c"
 dependencies = [
  "cfg-if",
+ "log",
  "tracing-attributes",
  "tracing-core",
 ]
@@ -354,11 +387,13 @@ name = "tracing_prism"
 version = "0.1.0"
 dependencies = [
  "async_executors",
+ "async_nursery",
  "futures 0.3.5",
  "gloo-events",
  "log",
  "thespis",
  "thespis_impl",
+ "tracing",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "wasm-logger",

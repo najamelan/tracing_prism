@@ -17,6 +17,7 @@ mod import
 		thespis         :: { *                              } ,
 		thespis_impl    :: { *                              } ,
 		async_executors :: { *                              } ,
+		async_nursery   :: { *                              } ,
 		std             :: { marker::PhantomData, rc::Rc    } ,
 		gloo_events     :: { *                              } ,
 		futures         :: { Stream, StreamExt, channel::{ mpsc::{ unbounded, UnboundedReceiver, UnboundedSender } } } ,
@@ -45,7 +46,7 @@ use wasm_bindgen::prelude::*;
 //
 pub async fn main()
 {
-	wasm_logger::init( wasm_logger::Config::default() );
+	wasm_logger::init( wasm_logger::Config::new( log::Level::Trace ) );
 
 
 	let window   = web_sys::window  ().expect_throw( "no global `window` exists"        );
@@ -56,11 +57,11 @@ pub async fn main()
 
 	let file_evts = EHandler::new( &upload, "change", true );
 
-	let add_col = get_id( "add-column" );
+	let add_col  = get_id( "add-column" );
 	let add_evts = EHandler::new( &add_col, "click", true );
 
 
-	let column_cont: HtmlElement = document.get_element_by_id( "columns" ).expect_throw( "doc should have columns element" ).unchecked_into();
+	let column_cont = document.get_element_by_id( "columns" ).expect_throw( "doc should have columns element" ).unchecked_into();
 
 	let addr_control = Addr::builder().start_local( Control::new(), &Bindgen ).expect_throw( "spawn control" );
 

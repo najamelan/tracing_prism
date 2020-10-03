@@ -1,16 +1,18 @@
 use crate::{ import::*, * };
 
 
-#[ derive( Actor, Clone ) ]
+#[ derive( Actor ) ]
 //
 pub struct Column
 {
-	parent    : HtmlElement   , // #columns
-	container : HtmlElement   , // .column
-	columns   : Addr<Columns> ,
-	addr      : Addr<Self>    ,
-	control   : Addr<Control> ,
-	filter    : Filter        ,
+	parent         : HtmlElement   , // #columns
+	container      : HtmlElement   , // .column
+	columns        : Addr<Columns> ,
+	addr           : Option< Addr<Self> >    ,
+	control        : Addr<Control> ,
+	filter         : Filter        ,
+	nursery        : Nursery< Bindgen, () > ,
+	nursery_output : Option< JoinHandle<()> >,
 }
 
 
@@ -20,6 +22,10 @@ impl Column
 	{
 		let container: HtmlElement = document().create_element( "div" ).expect_throw( "create div" ).unchecked_into();
 		container.set_class_name( "column" );
+
+		let (nursery, nursery_output) = Nursery::new( Bindgen );
+
+		let nursery_output = Some( Bindgen.spawn_handle( nursery_output ).expect_throw( "spawn nursery_output" ) );
 
 		let filter = Filter
 		{
@@ -36,10 +42,12 @@ impl Column
 		{
 			parent    ,
 			container ,
-			addr      ,
+			addr: Some(addr)      ,
 			columns   ,
 			control   ,
 			filter    ,
+			nursery   ,
+			nursery_output ,
 		}
 	}
 
@@ -129,16 +137,17 @@ impl Column
 	{
 		let button = self.find( elem );
 		let evts   = EHandler::new( &button, "click", true ).map( |_| Ok( M::default() ) );
-		let addr   = self.addr.clone();
+		let addr   = self.addr.as_ref().expect_throw( "Column unwrap addr" ).clone();
 
 		let task = async move
 		{
 			evts.forward( addr ).await.expect_throw( &format!( "send {:?}", M::default() ) );
+			debug!( "drop ehandler" );
 		};
 
 		// TODO: use nursery and make sure we don't leak when the column is removed.
 		//
-		spawn_local( task );
+		self.nursery.spawn_local( task ).expect_throw( "Column::toggle_button - spawn" );
 	}
 }
 
@@ -154,6 +163,7 @@ impl Handler<Render> for Column
 {
 	#[async_fn_local] fn handle_local( &mut self, _msg: Render )
 	{
+		let addr = self.addr.as_ref().expect_throw( "Column unwrap addr" ).clone();
 		let controls: HtmlElement = document().query_selector( ".col-controls.template" )
 
 			.expect_throw( "find col-controls" )
@@ -169,21 +179,25 @@ impl Handler<Render> for Column
 		self.container.append_child( &controls       ).expect_throw( "append filter" );
 		self.parent   .append_child( &self.container ).expect_throw( "append column" );
 
-		self.control.send( InitColumn( self.addr.clone() ) ).await.expect_throw( "send init column" );
+		self.control.send( InitColumn( addr.clone() ) )
+
+			.await.expect_throw( "send init column" );
 
 		// Set event listeners on buttons
 		// TODO: use drop channel
 		//
 		let filter      = self.find( ".filter-input" );
 		let filter_evts = EHandler::new( &filter, "input", true );
+		let task        = Column::on_filter( filter_evts, addr.clone() );
 
-		spawn_local( Column::on_filter( filter_evts, self.addr.clone() ) );
+		self.nursery.spawn_local( task ).expect_throw( "Handler<Render> for Column - spawn filter" );
 
 
 		let del_col  = self.find( ".button-close" );
 		let del_evts = EHandler::new( &del_col, "click", true );
+		let task     = Column::on_delcol( del_evts, addr );
 
-		spawn_local( Column::on_delcol( del_evts, self.addr.clone() ) );
+		self.nursery.spawn_local( task ).expect_throw( "Handler<Render> for Column - spawn close" );
 
 
 		self.toggle_button::<Collapse>( ".button-collapse" );
@@ -279,6 +293,8 @@ impl Handler<Update> for Column
 
 
 
+#[ derive( Debug, Default, Copy, Clone, PartialEq, Eq ) ]
+//
 pub struct DelColumn
 {
 	pub id: usize
@@ -291,9 +307,16 @@ impl Handler<DelColumn> for Column
 {
 	#[async_fn_local] fn handle_local( &mut self, msg: DelColumn )
 	{
+		// Stop processing input
+		//
+		drop( self.nursery_output.take() );
+		drop( self.addr.take()           );
+
 		self.container.set_inner_html( "" );
 		self.container.remove();
+
 		self.columns.send( msg ).await.expect_throw( "send DelColumn to Columns" );
+		self.control.send( msg ).await.expect_throw( "send DelColumn to Control" );
 	}
 
 	#[async_fn] fn handle( &mut self, _msg: DelColumn )
@@ -579,5 +602,14 @@ impl Handler<ToggleError> for Column
 	#[async_fn] fn handle( &mut self, _msg: ToggleError )
 	{
 		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
+	}
+}
+
+
+impl Drop for Column
+{
+	fn drop( &mut self )
+	{
+		debug!( "drop Column" );
 	}
 }

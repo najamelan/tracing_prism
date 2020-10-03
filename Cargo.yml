@@ -23,6 +23,8 @@ dependencies:
   wasm-bindgen-futures: ^0.4
   async_executors     : { version: ^0.3, features: [ bindgen ] }
   gloo-events         : ^0.1
+  async_nursery       : ^0.2
+  tracing             : { version: ^0.1, features: [log] }
 
   web-sys:
 

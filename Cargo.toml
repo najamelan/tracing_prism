@@ -1,5 +1,6 @@
 # Auto-generated from "Cargo.yml"
 [dependencies]
+async_nursery = "^0.2"
 futures = "^0.3"
 gloo-events = "^0.1"
 log = "^0.4"
@@ -17,6 +18,10 @@ version = "0.1.0-alpha"
 [dependencies.thespis_impl]
 features = []
 path = "../thespis/thespis_impl"
+
+[dependencies.tracing]
+features = ["log"]
+version = "^0.1"
 
 [dependencies.web-sys]
 features = ["Blob", "console", "CssStyleDeclaration", "Document", "DomRect", "DomTokenList", "Element", "File", "FileList", "HtmlCollection", "HtmlElement", "HtmlInputElement", "Node", "Window"]
