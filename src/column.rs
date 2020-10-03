@@ -106,42 +106,6 @@ impl Column
 	}
 
 
-	async fn on_trace( evts: impl Stream< Item=Event > + Unpin, column: Addr<Column> )
-	{
-		evts.map( |_| Ok( ToggleTrace ) ).forward( column ).await.expect_throw( "send ToggleTrace" );
-	}
-
-
-	async fn on_debug( evts: impl Stream< Item=Event > + Unpin, column: Addr<Column> )
-	{
-		evts.map( |_| Ok( ToggleDebug ) ).forward( column ).await.expect_throw( "send ToggleDebug" );
-	}
-
-
-	async fn on_info( evts: impl Stream< Item=Event > + Unpin, column: Addr<Column> )
-	{
-		evts.map( |_| Ok( ToggleInfo ) ).forward( column ).await.expect_throw( "send ToggleInfo" );
-	}
-
-
-	async fn on_warn( evts: impl Stream< Item=Event > + Unpin, column: Addr<Column> )
-	{
-		evts.map( |_| Ok( ToggleWarn ) ).forward( column ).await.expect_throw( "send ToggleWarn" );
-	}
-
-
-	async fn on_error( evts: impl Stream< Item=Event > + Unpin, column: Addr<Column> )
-	{
-		evts.map( |_| Ok( ToggleError ) ).forward( column ).await.expect_throw( "send ToggleError" );
-	}
-
-
-	async fn on_collapse( evts: impl Stream< Item=Event > + Unpin, column: Addr<Column> )
-	{
-		evts.map( |_| Ok( Collapse ) ).forward( column ).await.expect_throw( "send Collapse" );
-	}
-
-
 	async fn on_delcol
 	(
 		mut evts: impl Stream< Item=Event > + Unpin ,
@@ -150,6 +114,28 @@ impl Column
 	{
 		evts.next().await;
 		column.send( DelColumn{ id: column.id() } ).await.expect_throw( "send DelColumn" );
+	}
+
+
+	/// Set's up the event handlers for the loglevel filter buttons.
+	//
+	fn toggle_button<M>( &mut self, elem: &str )
+
+		where Self: Handler<M>,
+		      M   : Message + Default + std::fmt::Debug
+	{
+		let button = self.find( elem );
+		let evts   = EHandler::new( &button, "click", true ).map( |_| Ok( M::default() ) );
+		let addr   = self.addr.clone();
+
+		let task = async move
+		{
+			evts.forward( addr ).await.expect_throw( &format!( "send {:?}", M::default() ) );
+		};
+
+		// TODO: use nursery and make sure we don't leak when the column is removed.
+		//
+		spawn_local( task );
 	}
 }
 
@@ -191,46 +177,19 @@ impl Handler<Render> for Column
 		spawn_local( Column::on_filter( filter_evts, self.addr.clone() ) );
 
 
-		let trace_but  = self.find( ".button-trace" );
-		let trace_evts = EHandler::new( &trace_but, "click", true );
-
-		spawn_local( Column::on_trace( trace_evts, self.addr.clone() ) );
-
-
-		let debug_but  = self.find( ".button-debug" );
-		let debug_evts = EHandler::new( &debug_but, "click", true );
-
-		spawn_local( Column::on_debug( debug_evts, self.addr.clone() ) );
-
-
-		let info_but  = self.find( ".button-info" );
-		let info_evts = EHandler::new( &info_but, "click", true );
-
-		spawn_local( Column::on_info( info_evts, self.addr.clone() ) );
-
-
-		let warn_but  = self.find( ".button-warn" );
-		let warn_evts = EHandler::new( &warn_but, "click", true );
-
-		spawn_local( Column::on_warn( warn_evts, self.addr.clone() ) );
-
-
-		let error_but  = self.find( ".button-error" );
-		let error_evts = EHandler::new( &error_but, "click", true );
-
-		spawn_local( Column::on_error( error_evts, self.addr.clone() ) );
-
-
 		let del_col  = self.find( ".button-close" );
 		let del_evts = EHandler::new( &del_col, "click", true );
 
 		spawn_local( Column::on_delcol( del_evts, self.addr.clone() ) );
 
 
-		let collapse      = self.find( ".button-collapse" );
-		let collapse_evts = EHandler::new( &collapse, "click", true );
+		self.toggle_button::<Collapse>( ".button-collapse" );
 
-		spawn_local( Column::on_collapse( collapse_evts, self.addr.clone() ) );
+		self.toggle_button::<ToggleTrace>( ".button-trace" );
+		self.toggle_button::<ToggleDebug>( ".button-debug" );
+		self.toggle_button::<ToggleInfo >( ".button-info"  );
+		self.toggle_button::<ToggleWarn >( ".button-warn"  );
+		self.toggle_button::<ToggleError>( ".button-error" );
 	}
 
 
@@ -331,6 +290,8 @@ impl Handler<DelColumn> for Column
 
 
 
+#[ derive( Debug, Default, Copy, Clone ) ]
+//
 pub struct Collapse;
 
 impl Message for Collapse { type Return = (); }
@@ -411,6 +372,8 @@ impl Handler<ChangeFilter> for Column
 
 
 
+#[ derive( Debug, Default, Copy, Clone ) ]
+//
 pub struct ToggleTrace;
 
 impl Message for ToggleTrace { type Return = (); }
@@ -447,6 +410,8 @@ impl Handler<ToggleTrace> for Column
 
 
 
+#[ derive( Debug, Default, Copy, Clone ) ]
+//
 pub struct ToggleDebug;
 
 impl Message for ToggleDebug { type Return = (); }
@@ -483,6 +448,8 @@ impl Handler<ToggleDebug> for Column
 
 
 
+#[ derive( Debug, Default, Copy, Clone ) ]
+//
 pub struct ToggleInfo;
 
 impl Message for ToggleInfo { type Return = (); }
@@ -519,6 +486,8 @@ impl Handler<ToggleInfo> for Column
 
 
 
+#[ derive( Debug, Default, Copy, Clone ) ]
+//
 pub struct ToggleWarn;
 
 impl Message for ToggleWarn { type Return = (); }
@@ -555,6 +524,8 @@ impl Handler<ToggleWarn> for Column
 
 
 
+#[ derive( Debug, Default, Copy, Clone ) ]
+//
 pub struct ToggleError;
 
 impl Message for ToggleError { type Return = (); }
