@@ -273,7 +273,9 @@ impl Handler<Update> for Column
 		{
 			if let Some(logview) = self.logview()
 			{
+				logview.remove();
 				self.filter( &logview, &f );
+				self.container.append_child( &logview ).expect_throw( "Handler<Update> for Column - append logview");
 			}
 
 			else

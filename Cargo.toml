@@ -20,7 +20,7 @@ features = []
 path = "../thespis/thespis_impl"
 
 [dependencies.tracing]
-features = ["log"]
+features = []
 version = "^0.1"
 
 [dependencies.web-sys]
