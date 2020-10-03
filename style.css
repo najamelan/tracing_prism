@@ -53,9 +53,10 @@ body
 }
 
 
-.column div p
+.logview p
 {
 	margin: 0;
+	padding: .2rem 0;
 	font-family: "Source Code Pro", Consolas, monospace;
 }
 
