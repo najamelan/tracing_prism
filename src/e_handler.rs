@@ -1,6 +1,8 @@
 use crate::import::*;
 
 
+/// turn gloo-events into an async stream.
+//
 pub struct EHandler
 {
 	receiver: UnboundedReceiver<Event>,
@@ -13,15 +15,17 @@ pub struct EHandler
 
 impl EHandler
 {
-	pub fn new( target: &EventTarget, event: &'static str, passive: bool ) -> Self
+	/// When prevent_default is true, the event will not trigger the browsers default action.
+	/// eg. like checking a checkbox when clicked.
+	//
+	pub fn new( target: &EventTarget, event: &'static str, prevent_default: bool ) -> Self
 	{
-		// debug!( "set event handler" );
-
 		let (sender, receiver) = unbounded();
-		let options = match passive
+
+		let options = match prevent_default
 		{
-			false => EventListenerOptions::enable_prevent_default(),
-			true  => EventListenerOptions::default(),
+			true  => EventListenerOptions::enable_prevent_default(),
+			false => EventListenerOptions::default(),
 		};
 
 		// Attach an event listener

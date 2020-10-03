@@ -186,49 +186,49 @@ impl Handler<Render> for Column
 		// TODO: use drop channel
 		//
 		let filter      = self.find( ".filter-input" );
-		let filter_evts = EHandler::new( &filter, "input", false );
+		let filter_evts = EHandler::new( &filter, "input", true );
 
 		spawn_local( Column::on_filter( filter_evts, self.addr.clone() ) );
 
 
 		let trace_but  = self.find( ".button-trace" );
-		let trace_evts = EHandler::new( &trace_but, "click", false );
+		let trace_evts = EHandler::new( &trace_but, "click", true );
 
 		spawn_local( Column::on_trace( trace_evts, self.addr.clone() ) );
 
 
 		let debug_but  = self.find( ".button-debug" );
-		let debug_evts = EHandler::new( &debug_but, "click", false );
+		let debug_evts = EHandler::new( &debug_but, "click", true );
 
 		spawn_local( Column::on_debug( debug_evts, self.addr.clone() ) );
 
 
 		let info_but  = self.find( ".button-info" );
-		let info_evts = EHandler::new( &info_but, "click", false );
+		let info_evts = EHandler::new( &info_but, "click", true );
 
 		spawn_local( Column::on_info( info_evts, self.addr.clone() ) );
 
 
 		let warn_but  = self.find( ".button-warn" );
-		let warn_evts = EHandler::new( &warn_but, "click", false );
+		let warn_evts = EHandler::new( &warn_but, "click", true );
 
 		spawn_local( Column::on_warn( warn_evts, self.addr.clone() ) );
 
 
 		let error_but  = self.find( ".button-error" );
-		let error_evts = EHandler::new( &error_but, "click", false );
+		let error_evts = EHandler::new( &error_but, "click", true );
 
 		spawn_local( Column::on_error( error_evts, self.addr.clone() ) );
 
 
 		let del_col  = self.find( ".button-close" );
-		let del_evts = EHandler::new( &del_col, "click", false );
+		let del_evts = EHandler::new( &del_col, "click", true );
 
 		spawn_local( Column::on_delcol( del_evts, self.addr.clone() ) );
 
 
 		let collapse      = self.find( ".button-collapse" );
-		let collapse_evts = EHandler::new( &collapse, "click", false );
+		let collapse_evts = EHandler::new( &collapse, "click", true );
 
 		spawn_local( Column::on_collapse( collapse_evts, self.addr.clone() ) );
 	}

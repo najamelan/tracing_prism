@@ -54,10 +54,10 @@ pub async fn main()
 
 	let upload = get_id( "upload" );
 
-	let file_evts = EHandler::new( &upload, "change", false );
+	let file_evts = EHandler::new( &upload, "change", true );
 
 	let add_col = get_id( "add-column" );
-	let add_evts = EHandler::new( &add_col, "click", false );
+	let add_evts = EHandler::new( &add_col, "click", true );
 
 
 	let column_cont: HtmlElement = document.get_element_by_id( "columns" ).expect_throw( "doc should have columns element" ).unchecked_into();
