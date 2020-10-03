@@ -3,19 +3,26 @@ use crate::{ *, import::* };
 
 pub enum LogLevel
 {
-	Trace,
-	Debug,
-	Info,
-	Warn,
-	Error,
-	Unknown,
+	Trace   ,
+	Debug   ,
+	Info    ,
+	Warn    ,
+	Error   ,
+	Unknown ,
 }
 
 
+/// Represents one line in the log.
+///
+/// Functionality:
+///
+/// - detect which log level a line is
+/// - determine whether this line is to be shown based on a given filter
+//
 pub struct Entry
 {
-	pub lvl: LogLevel,
-	pub txt: String,
+	pub lvl: LogLevel ,
+	pub txt: String   ,
 }
 
 
@@ -37,6 +44,8 @@ impl Entry
 	}
 
 
+	/// Should this line be shown for the given filter?
+	//
 	pub fn show( &self, filter: &Filter ) -> bool
 	{
 		let mut show = true;

@@ -26,9 +26,9 @@ pub enum Show
 //
 pub struct Control
 {
-	logview: Option<HtmlElement>            ,
-	lines  : Option< Arc<Vec<Entry>> >      ,
-	show   : HashMap< usize, Vec<Show> >    ,
+	logview: Option < HtmlElement         > ,
+	lines  : Option < Vec<Entry>          > ,
+	show   : HashMap< usize, Vec<Show>    > ,
 	columns: HashMap< usize, Addr<Column> > ,
 	filters: HashMap< usize, Filter       > ,
 }
@@ -49,20 +49,20 @@ impl Control
 	}
 
 
-	pub fn filter( &mut self, filter: &mut Filter )
+	pub fn filter( lines: &Option< Vec<Entry> >, show: &mut HashMap< usize, Vec<Show> >, filter: &mut Filter )
 	{
-		match &self.lines
+		match &lines
 		{
 			None => return,
 
 			Some(vec) =>
 			{
-				let vis = match self.show.get_mut( &filter.id )
+				let vis = match show.get_mut( &filter.id )
 				{
 					None =>
 					{
-						self.show.insert( filter.id, Vec::new() );
-						self.show.get_mut( &filter.id ).expect_throw( "Control::filter - column exists" )
+						show.insert( filter.id, Vec::new() );
+						show.get_mut( &filter.id ).expect_throw( "Control::filter - column exists" )
 					}
 
 					Some(v) =>
@@ -73,7 +73,7 @@ impl Control
 				};
 
 
-				for e in vec.as_ref()
+				for e in vec
 				{
 					// check whether we show or not according to filter
 					//
@@ -112,8 +112,8 @@ impl Handler<InitColumn> for Control
 		{
 			addr.send( Update
 			{
-				block: Some( block.clone_node_with_deep( true ).expect_throw( "clone text" ).unchecked_into() ),
-				filter: None, // TODO
+				block : Some( block.clone_node_with_deep( true ).expect_throw( "clone text" ).unchecked_into() ),
+				filter: None, // as the column is brand new, no filters yet.
 
 			}).await.expect_throw( "send textblock to column" );
 		}
@@ -172,17 +172,32 @@ impl Handler<SetText> for Control
 			block.append_child( &p ).expect_throw( "append p" );
 		}
 
-		for col in &mut self.columns.values_mut()
+
+		// must happen before the loop as we call filter
+		//
+		self.lines = Some( entries );
+
+
+		for col in self.columns.values_mut()
 		{
+			// If there are pre-existing filters, process the text.
+			//
+			if let Some(mut filter) = self.filters.get_mut( &col.id() )
+			{
+				Self::filter( &self.lines, &mut self.show, &mut filter );
+			}
+
+			// Send the new text to each column with the last filter we have.
+			//
 			col.send( Update
 			{
 				block: Some( block.clone_node_with_deep( true ).expect_throw( "clone text" ).unchecked_into() ),
-				filter: None,
+				filter: self.show.get( &col.id() ).map( Clone::clone ),
 
 			}).await.expect_throw( "send textblock to column" );
 		}
 
-		self.lines = Some( Arc::new( entries ) );
+
 		self.logview = Some( block );
 	}
 
@@ -213,16 +228,22 @@ impl Handler<Filter> for Control
 {
 	#[async_fn_local] fn handle_local( &mut self, mut msg: Filter )
 	{
-		self.filter( &mut msg );
+		Self::filter( &self.lines, &mut self.show, &mut msg );
 
 		let col = self.columns.get_mut( &msg.id ).expect_throw( "Handler<Filter>: column to exist" );
 
-		col.send( Update
-		{
-			block : None,
-			filter: self.show.get( &msg.id ).map( |f| f.clone() )
 
-		}).await.expect_throw( "send" );
+		// only tell columns to filter if there is text.
+		//
+		if self.logview.is_some()
+		{
+			col.send( Update
+			{
+				block : None,
+				filter: self.show.get( &msg.id ).map( |f| f.clone() )
+
+			}).await.expect_throw( "send" );
+		}
 
 
 		self.filters.insert( msg.id, msg );

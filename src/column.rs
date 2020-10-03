@@ -59,9 +59,9 @@ impl Column
 
 	/// Set's the classes to hide and display none on lines.
 	//
-	fn filter( &self, filter: &Vec<Show> )
+	fn filter( &self, logview: &HtmlElement, filter: &Vec<Show> )
 	{
-		let children = self.find( ".logview" ).children();
+		let children = logview.children();
 
 		let mut i = 0;
 		let length = children.length();
@@ -75,16 +75,19 @@ impl Column
 				Show::None =>
 				{
 					p.style().set_property( "visibility", "hidden" ).expect_throw( "hide line" );
+					p.style().set_property( "display"   , "none"   ).expect_throw( "hide line" );
 				}
 
 				Show::Visible =>
 				{
 					p.style().set_property( "visibility", "visible" ).expect_throw( "hide line" );
+					p.style().set_property( "display"   , "block"   ).expect_throw( "hide line" );
 				}
 
 				Show::Hidden =>
 				{
 					p.style().set_property( "visibility", "hidden" ).expect_throw( "hide line" );
+					p.style().set_property( "display"   , "block"  ).expect_throw( "hide line" );
 				}
 			}
 
@@ -242,18 +245,29 @@ impl Handler<Update> for Column
 			{
 				block.style().set_property( "display", "none" ).expect_throw( "set display none" );
 			}
-		}
 
+			if let Some(f) = msg.filter
+			{
+				self.filter( &block, &f );
+			}
 
-		if let Some(f) = msg.filter
-		{
-			self.filter( &f );
-		}
-
-
-		if let Some(block) = msg.block
-		{
 			self.container.append_child( &block ).expect_throw( "append div" );
+		}
+
+
+		else if let Some(f) = msg.filter
+		{
+			if let Some(logview) = self.logview()
+			{
+				self.filter( &logview, &f );
+			}
+
+			else
+			{
+				// Control shouldn't send us filters unless there is text.
+				//
+				unreachable!();
+			}
 		}
 	}
 
@@ -358,9 +372,17 @@ impl Handler<ChangeFilter> for Column
 	{
 		let filter: HtmlInputElement = self.find( ".filter-input" ).unchecked_into();
 
-		self.filter.txt = filter.value().to_lowercase();
+		let new = filter.value().to_lowercase();
 
-		self.control.send( self.filter.clone() ).await.expect_throw( "update filter" );
+		// Don't do anything if the text hasn't changed. This can happen when the user
+		// types faster than we can process. Then several events will be fired before we
+		// read the input value. However, we will still get to process the other events.
+		//
+		if self.filter.txt != new
+		{
+			self.filter.txt = new;
+			self.control.send( self.filter.clone() ).await.expect_throw( "update filter" );
+		}
 	}
 
 
