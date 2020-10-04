@@ -48,6 +48,11 @@ body, html
 	background: var( --bg-darker );
 }
 
+.logview > p:nth-child(even)
+{
+	background: var( --background );
+}
+
 button
 {
 	background: var( --background );
