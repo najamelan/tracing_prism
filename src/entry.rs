@@ -46,7 +46,7 @@ impl Entry
 
 	/// Should this line be shown for the given filter?
 	//
-	pub fn show( &self, filter: &Filter ) -> bool
+	pub fn should_show( &self, filter: &Filter ) -> bool
 	{
 		let mut show = true;
 

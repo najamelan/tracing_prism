@@ -49,48 +49,142 @@ impl Control
 	}
 
 
-	pub fn filter( lines: &Option< Vec<Entry> >, show: &mut HashMap< usize, Vec<Show> >, filter: &mut Filter )
+	#[ must_use = "update the other columns" ]
+	//
+	pub fn filter
+	(
+		lines : &Option< Vec<Entry> >            ,
+		show  : &mut HashMap< usize, Vec<Show> > ,
+		filter: &mut Filter                      ,
+		mut all_have_filters: bool               ,
+	)
+
+		-> HashMap< usize, bool >
 	{
-		match &lines
+		let mut columns_to_update = HashMap::new();
+
+
+		// Nothing to filter if no text has yet been set.
+		//
+		let text = match &lines
 		{
-			None => return,
+			None    => return columns_to_update ,
+			Some(v) => v                        ,
+		};
 
-			Some(vec) =>
+
+		let mut vis = Vec::with_capacity( text.len() );
+
+		// The other columns visibility settings.
+		//
+		let mut others: Vec<(usize, &mut Vec<Show>)> = Vec::with_capacity( show.len() );
+
+		for (k, v) in show.iter_mut()
+		{
+			if *k != filter.id
 			{
-				let vis = match show.get_mut( &filter.id )
+				// When setting a new text, not all columns might have been processed yet.
+				// In any case, it only makes sense to do the cross column checks on the last one.
+				//
+				if v.is_empty()
 				{
-					None =>
-					{
-						show.insert( filter.id, Vec::new() );
-						show.get_mut( &filter.id ).expect_throw( "Control::filter - column exists" )
-					}
+					all_have_filters = false;
+					break;
+				}
 
-					Some(v) =>
-					{
-						v.clear();
-						v
-					}
-				};
+				others.push( (*k,v) );
+			}
+
+		}
 
 
-				for e in vec
+
+		// for each line
+		//
+		for (i, e) in text.iter().enumerate()
+		{
+			// check whether we show or not according to filter
+			//
+			match e.should_show( filter )
+			{
+				true =>
 				{
-					// check whether we show or not according to filter
+					vis.push( Show::Visible );
+
+					// We will be visible. Make sure no other column has this set to display:none.
+					// We only do cross column logic if every column has a filter set, since otherwise
+					// there is at least one column wich will show all lines.
 					//
-					match e.show( filter )
+					if all_have_filters
 					{
-						true => vis.push( Show::Visible ) ,
-
-						// if not shown, check whether any other column shows it
-						//
-						false =>
+						for other in &mut others
 						{
-							vis.push( Show::Hidden );
-						},
+							if other.1[i] == Show::None
+							{
+								other.1[i] = Show::Hidden;
+								columns_to_update.insert( other.0, true );
+							}
+						}
 					}
 				}
+
+
+				false =>
+				{
+					// if not shown, check whether any other column shows it
+					//
+					if all_have_filters
+					{
+						let mut display_none = true;
+
+						for other in &others
+						{
+							if other.1[i] == Show::Visible
+							{
+								display_none = false;
+							}
+						}
+
+						if display_none
+						{
+							// nobody actually shows the line, display: none.
+							//
+							vis.push( Show::None );
+
+							for other in &mut others
+							{
+								if other.1[i] == Show::Hidden
+								{
+									other.1[i] = Show::None;
+									columns_to_update.insert( other.0, true );
+								}
+							}
+						}
+
+						// some columns show the line.
+						//
+						else
+						{
+							vis.push( Show::Hidden );
+						}
+					}
+
+
+					// not all columns have filters, just hide
+					//
+					else
+					{
+						vis.push( Show::Hidden );
+					}
+				},
 			}
 		}
+
+		// drop( others );
+
+		show.insert( filter.id, vis );
+
+		columns_to_update
 	}
 }
 
@@ -173,10 +267,22 @@ impl Handler<SetText> for Control
 		}
 
 
+		// As we are setting a new text, make sure there are no more show filters around.
+		//
+		for (_, show) in &mut self.show
+		{
+			show.clear();
+		}
+
+
+
+		let mut update = HashMap::new();
+
+
 		// must happen before the loop as we call filter
 		//
 		self.lines = Some( entries );
-
+		let all_have_filters = self.columns.len() == self.filters.len();
 
 		for col in self.columns.values_mut()
 		{
@@ -184,7 +290,7 @@ impl Handler<SetText> for Control
 			//
 			if let Some(mut filter) = self.filters.get_mut( &col.id() )
 			{
-				Self::filter( &self.lines, &mut self.show, &mut filter );
+				update = Self::filter( &self.lines, &mut self.show, &mut filter, all_have_filters );
 			}
 
 			// Send the new text to each column with the last filter we have.
@@ -192,6 +298,18 @@ impl Handler<SetText> for Control
 			col.send( Update
 			{
 				block: Some( block.clone_node_with_deep( true ).expect_throw( "clone text" ).unchecked_into() ),
+				filter: self.show.get( &col.id() ).map( Clone::clone ),
+
+			}).await.expect_throw( "send textblock to column" );
+		}
+
+		for id in update.keys()
+		{
+			let col = self.columns.get_mut( &id ).expect_throw( "Handler<SetText> for Control - column to exist" );
+
+			col.send( Update
+			{
+				block: None,
 				filter: self.show.get( &col.id() ).map( Clone::clone ),
 
 			}).await.expect_throw( "send textblock to column" );
@@ -228,7 +346,10 @@ impl Handler<Filter> for Control
 {
 	#[async_fn_local] fn handle_local( &mut self, mut msg: Filter )
 	{
-		Self::filter( &self.lines, &mut self.show, &mut msg );
+		self.filters.insert( msg.id, msg.clone() );
+
+		let all_have_filters = self.columns.len() == self.filters.len();
+		let update = Self::filter( &self.lines, &mut self.show, &mut msg, all_have_filters );
 
 		let col = self.columns.get_mut( &msg.id ).expect_throw( "Handler<Filter>: column to exist" );
 
@@ -240,13 +361,24 @@ impl Handler<Filter> for Control
 			col.send( Update
 			{
 				block : None,
-				filter: self.show.get( &msg.id ).map( |f| f.clone() )
+				filter: self.show.get( &msg.id ).map( Clone::clone )
 
 			}).await.expect_throw( "send" );
 		}
 
+		// Update the other columns to hide lines nobody shows.
+		//
+		for id in update.keys()
+		{
+			let col = self.columns.get_mut( &id ).expect_throw( "Handler<SetText> for Control - column to exist" );
 
-		self.filters.insert( msg.id, msg );
+			col.send( Update
+			{
+				block: None,
+				filter: self.show.get( &col.id() ).map( Clone::clone ),
+
+			}).await.expect_throw( "send textblock to column" );
+		}
 	}
 
 	#[async_fn] fn handle( &mut self, _msg: Filter )
