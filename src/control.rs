@@ -22,6 +22,18 @@ pub enum Show
 
 
 
+// The brains of the application.
+//
+// When the column get filtered, they send their filter settings and this computes
+// the display settings for each line.
+//
+// When a line is hidden in all columns, we set it to display: none so we recover the space.
+// This means that we need to re-evaluate if any columns show a line at:
+// - set text   -> re-apply existing filters
+// - add column -> this one shows all lines by default
+// - del column -> any lines that were only shown in this one need to be display: none now in other columns.
+// - filter     -> when any filter changes and it makes lines visible, we need to re-evaluate other columns.
+//
 #[ derive( Actor ) ]
 //
 pub struct Control
@@ -49,6 +61,9 @@ impl Control
 	}
 
 
+	/// Process a filter change. Returns a hashmap with other columns that need to
+	/// recalculate lines that where display: none vs visibility: hidden.
+	///
 	#[ must_use = "update the other columns" ]
 	//
 	pub fn filter
@@ -56,7 +71,7 @@ impl Control
 		lines : &Option< Vec<Entry> >            ,
 		show  : &mut HashMap< usize, Vec<Show> > ,
 		filter: &mut Filter                      ,
-		mut all_have_filters: bool               ,
+		all_have_filters: bool                   ,
 	)
 
 		-> HashMap< usize, bool >
@@ -83,15 +98,6 @@ impl Control
 		{
 			if *k != filter.id
 			{
-				// When setting a new text, not all columns might have been processed yet.
-				// In any case, it only makes sense to do the cross column checks on the last one.
-				//
-				if v.is_empty()
-				{
-					all_have_filters = false;
-					break;
-				}
-
 				others.push( (*k,v) );
 			}
 
@@ -105,7 +111,7 @@ impl Control
 		{
 			// check whether we show or not according to filter
 			//
-			match e.should_show( filter )
+			match e.matches( filter )
 			{
 				true =>
 				{
@@ -202,7 +208,41 @@ impl Handler<InitColumn> for Control
 	{
 		let mut addr = msg.0;
 
-		if let Some( block ) = &self.logview
+		if let Some(text) = &mut self.lines
+		{
+			for mut entry in text
+			{
+				entry.shown += 1;
+			}
+
+			// Since we are adding a new column which will be showing all text,
+			// we need to remove all display: none.
+			//
+			for (id, col_addr) in &mut self.columns
+			{
+				if let Some(show) = self.show.get_mut( &id )
+				{
+					for vis in show.iter_mut()
+					{
+						if vis == &Show::None
+						{
+							*vis = Show::Hidden;
+						}
+					}
+
+
+					col_addr.send( Update
+					{
+						block : None,
+						filter: Some( show.clone() ),
+
+					}).await.expect_throw( "send textblock to column" );
+				}
+			}
+		};
+
+
+		if let Some(block) = &self.logview
 		{
 			addr.send( Update
 			{
@@ -239,7 +279,7 @@ impl Handler<SetText> for Control
 	{
 		let entries: Vec<Entry> = msg.text.lines().map( |txt|
 		{
-			Entry::new( txt.to_string() )
+			Entry::new( txt.to_string(), self.columns.len() )
 
 		}).collect();
 
@@ -269,11 +309,7 @@ impl Handler<SetText> for Control
 
 		// As we are setting a new text, make sure there are no more show filters around.
 		//
-		for (_, show) in &mut self.show
-		{
-			show.clear();
-		}
-
+		self.show.clear();
 
 
 		let mut update = HashMap::new();
@@ -337,6 +373,23 @@ pub struct Filter
 	pub info : bool   ,
 	pub warn : bool   ,
 	pub error: bool   ,
+}
+
+impl Filter
+{
+	pub fn new( id: usize ) -> Self
+	{
+		Self
+		{
+			id                   ,
+			txt  : String::new() ,
+			trace: true          ,
+			debug: true          ,
+			info : true          ,
+			warn : true          ,
+			error: true          ,
+		}
+	}
 }
 
 impl Message for Filter { type Return = (); }

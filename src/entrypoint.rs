@@ -22,7 +22,7 @@ mod import
 		gloo_events     :: { *                              } ,
 		futures         :: { Stream, StreamExt, channel::{ mpsc::{ unbounded, UnboundedReceiver, UnboundedSender } } } ,
 		futures         :: { task::LocalSpawnExt } ,
-		std             :: { task::*, pin::Pin, panic, collections::HashMap, sync::Arc  } ,
+		std             :: { task::*, pin::Pin, panic, collections::HashMap, sync::Arc, convert::TryInto  } ,
 		wasm_bindgen_futures :: { spawn_local, JsFuture                      } ,
 	};
 }

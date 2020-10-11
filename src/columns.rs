@@ -27,17 +27,10 @@ impl Columns
 		{
 			let     (addr, mb)    = Addr::builder().build();
 			let     col           = Column::new( container.clone(), addr.clone(), addr_columns.clone(), addr_control.clone() );
-			let mut addr_control2 = addr_control.clone();
 
 			children.insert( addr.id(), addr.clone() );
 
-
 			spawn_local( async{ mb.start_local( col ).await; } );
-
-			spawn_local( async move
-			{
-				addr_control2.send( InitColumn(addr) ).await.expect_throw( "send column to control" );
-			});
 		}
 
 		Self
@@ -54,7 +47,7 @@ impl Columns
 	{
 		for child in &mut self.children.values_mut()
 		{
-			child.send( Render{} ).await.expect_throw( "send Render to column" );
+			child.send( Render ).await.expect_throw( "send Render to column" );
 		}
 	}
 }

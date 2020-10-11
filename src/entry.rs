@@ -21,14 +21,15 @@ pub enum LogLevel
 //
 pub struct Entry
 {
-	pub lvl: LogLevel ,
-	pub txt: String   ,
+	pub lvl  : LogLevel ,
+	pub txt  : String   ,
+	pub shown: usize    ,
 }
 
 
 impl Entry
 {
-	pub fn new( txt: String ) -> Self
+	pub fn new( txt: String, cols: usize ) -> Self
 	{
 		let lvl =
 
@@ -40,13 +41,13 @@ impl Entry
 			else                              { LogLevel::Unknown }
 		;
 
-		Self { lvl, txt }
+		Self { lvl, txt, shown: cols }
 	}
 
 
 	/// Should this line be shown for the given filter?
 	//
-	pub fn should_show( &self, filter: &Filter ) -> bool
+	pub fn matches( &self, filter: &Filter ) -> bool
 	{
 		let mut show = true;
 
