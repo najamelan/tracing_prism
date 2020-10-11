@@ -1,5 +1,15 @@
 use crate::{ *, import::*, column::Column };
 
+mod filter      ;
+mod init_column ;
+mod set_text    ;
+
+pub use
+{
+	filter      :: *,
+	init_column :: *,
+	set_text    :: *,
+};
 
 
 #[ derive( Debug, Copy, Clone, PartialEq, Eq ) ]
@@ -18,8 +28,6 @@ pub enum Show
 	//
 	Visible,
 }
-
-
 
 
 // The brains of the application.
@@ -194,251 +202,6 @@ impl Control
 	}
 }
 
-
-// A column is always created with an empty filter. So we send back unfiltered text.
-//
-pub struct InitColumn( pub Addr<Column> );
-
-impl Message for InitColumn { type Return = (); }
-
-
-impl Handler<InitColumn> for Control
-{
-	#[async_fn_local] fn handle_local( &mut self, msg: InitColumn )
-	{
-		let mut addr = msg.0;
-
-		if let Some(text) = &mut self.lines
-		{
-			for mut entry in text
-			{
-				entry.shown += 1;
-			}
-
-			// Since we are adding a new column which will be showing all text,
-			// we need to remove all display: none.
-			//
-			for (id, col_addr) in &mut self.columns
-			{
-				if let Some(show) = self.show.get_mut( &id )
-				{
-					for vis in show.iter_mut()
-					{
-						if vis == &Show::None
-						{
-							*vis = Show::Hidden;
-						}
-					}
-
-
-					col_addr.send( Update
-					{
-						block : None,
-						filter: Some( show.clone() ),
-
-					}).await.expect_throw( "send textblock to column" );
-				}
-			}
-		};
-
-
-		if let Some(block) = &self.logview
-		{
-			addr.send( Update
-			{
-				block : Some( block.clone_node_with_deep( true ).expect_throw( "clone text" ).unchecked_into() ),
-				filter: None, // as the column is brand new, no filters yet.
-
-			}).await.expect_throw( "send textblock to column" );
-		}
-
-		self.columns.insert( addr.id(), addr );
-	}
-
-	#[async_fn] fn handle( &mut self, _msg: InitColumn )
-	{
-		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
-	}
-}
-
-
-
-
-pub struct SetText
-{
-	pub text: String,
-}
-
-impl Message for SetText { type Return = (); }
-
-
-
-impl Handler<SetText> for Control
-{
-	#[async_fn_local] fn handle_local( &mut self, msg: SetText )
-	{
-		let entries: Vec<Entry> = msg.text.lines().map( |txt|
-		{
-			Entry::new( txt.to_string(), self.columns.len() )
-
-		}).collect();
-
-
-		let block: HtmlElement = document().create_element( "div" ).expect_throw( "create div tag" ).unchecked_into();
-		block.set_class_name( "logview" );
-
-		for line in &entries
-		{
-			let p: HtmlElement = document().create_element( "p" ).expect_throw( "create p tag" ).unchecked_into();
-
-			let class = match line.lvl
-			{
-				LogLevel::Trace   => "trace"          ,
-				LogLevel::Debug   => "debug"          ,
-				LogLevel::Info    => "info"           ,
-				LogLevel::Warn    => "warn"           ,
-				LogLevel::Error   => "error"          ,
-				LogLevel::Unknown => "unknown_loglvl" ,
-			};
-
-			p.class_list().add_1( class ).expect_throw( "add class to p" );
-			p.set_inner_text( &line.txt );
-			block.append_child( &p ).expect_throw( "append p" );
-		}
-
-
-		// As we are setting a new text, make sure there are no more show filters around.
-		//
-		self.show.clear();
-
-
-		let mut update = HashMap::new();
-
-
-		// must happen before the loop as we call filter
-		//
-		self.lines = Some( entries );
-		let all_have_filters = self.columns.len() == self.filters.len();
-
-		for col in self.columns.values_mut()
-		{
-			// If there are pre-existing filters, process the text.
-			//
-			if let Some(mut filter) = self.filters.get_mut( &col.id() )
-			{
-				update = Self::filter( &self.lines, &mut self.show, &mut filter, all_have_filters );
-			}
-
-			// Send the new text to each column with the last filter we have.
-			//
-			col.send( Update
-			{
-				block: Some( block.clone_node_with_deep( true ).expect_throw( "clone text" ).unchecked_into() ),
-				filter: self.show.get( &col.id() ).map( Clone::clone ),
-
-			}).await.expect_throw( "send textblock to column" );
-		}
-
-		for id in update.keys()
-		{
-			let col = self.columns.get_mut( &id ).expect_throw( "Handler<SetText> for Control - column to exist" );
-
-			col.send( Update
-			{
-				block: None,
-				filter: self.show.get( &col.id() ).map( Clone::clone ),
-
-			}).await.expect_throw( "send textblock to column" );
-		}
-
-
-		self.logview = Some( block );
-	}
-
-	#[async_fn] fn handle( &mut self, _msg: SetText )
-	{
-		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
-	}
-}
-
-
-#[ derive( Debug, Clone, PartialEq, Eq ) ]
-//
-pub struct Filter
-{
-	pub id   : usize  ,
-	pub txt  : String ,
-	pub trace: bool   ,
-	pub debug: bool   ,
-	pub info : bool   ,
-	pub warn : bool   ,
-	pub error: bool   ,
-}
-
-impl Filter
-{
-	pub fn new( id: usize ) -> Self
-	{
-		Self
-		{
-			id                   ,
-			txt  : String::new() ,
-			trace: true          ,
-			debug: true          ,
-			info : true          ,
-			warn : true          ,
-			error: true          ,
-		}
-	}
-}
-
-impl Message for Filter { type Return = (); }
-
-
-impl Handler<Filter> for Control
-{
-	#[async_fn_local] fn handle_local( &mut self, mut msg: Filter )
-	{
-		self.filters.insert( msg.id, msg.clone() );
-
-		let all_have_filters = self.columns.len() == self.filters.len();
-		let update = Self::filter( &self.lines, &mut self.show, &mut msg, all_have_filters );
-
-		let col = self.columns.get_mut( &msg.id ).expect_throw( "Handler<Filter>: column to exist" );
-
-
-		// only tell columns to filter if there is text.
-		//
-		if self.logview.is_some()
-		{
-			col.send( Update
-			{
-				block : None,
-				filter: self.show.get( &msg.id ).map( Clone::clone )
-
-			}).await.expect_throw( "send" );
-		}
-
-		// Update the other columns to hide lines nobody shows.
-		//
-		for id in update.keys()
-		{
-			let col = self.columns.get_mut( &id ).expect_throw( "Handler<SetText> for Control - column to exist" );
-
-			col.send( Update
-			{
-				block: None,
-				filter: self.show.get( &col.id() ).map( Clone::clone ),
-
-			}).await.expect_throw( "send textblock to column" );
-		}
-	}
-
-	#[async_fn] fn handle( &mut self, _msg: Filter )
-	{
-		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
-	}
-}
 
 
 
