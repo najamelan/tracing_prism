@@ -39,8 +39,8 @@ impl Handler<Filter> for Control
 	{
 		self.filters.insert( msg.id, msg.clone() );
 
-		let all_have_filters = self.columns.len() == self.filters.len();
-		let update = Self::filter( &self.lines, &mut self.show, &mut msg, all_have_filters );
+		let all    = self.all_have_filters();
+		let update = Self::filter( &self.lines, &mut self.show, &mut msg, all );
 
 		let col = self.columns.get_mut( &msg.id ).expect_throw( "Handler<Filter>: column to exist" );
 
@@ -57,20 +57,23 @@ impl Handler<Filter> for Control
 			}).await.expect_throw( "send" );
 		}
 
+
 		// Update the other columns to hide lines nobody shows.
 		//
-		for id in update.keys()
+		if update
 		{
-			let col = self.columns.get_mut( &id ).expect_throw( "Handler<SetText> for Control - column to exist" );
-
-			col.send( Update
+			for (_, col) in self.columns.iter_mut().filter( |(id, _)| **id != msg.id )
 			{
-				block: None,
-				filter: self.show.get( &col.id() ).map( Clone::clone ),
+				col.send( Update
+				{
+					block: None,
+					filter: self.show.get( &col.id() ).map( Clone::clone ),
 
-			}).await.expect_throw( "send textblock to column" );
+				}).await.expect_throw( "send textblock to column" );
+			}
 		}
 	}
+
 
 	#[async_fn] fn handle( &mut self, _msg: Filter )
 	{

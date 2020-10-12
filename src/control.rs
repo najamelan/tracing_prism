@@ -12,6 +12,11 @@ pub use
 };
 
 
+
+/// Whether to show lines. We distinguish between hiding the text and display: none. When no
+/// column shows a certain line, we use display: none to avoid wasting screen space as the user
+/// might have to scroll a lot to read the log.
+//
 #[ derive( Debug, Copy, Clone, PartialEq, Eq ) ]
 //
 pub enum Show
@@ -20,7 +25,7 @@ pub enum Show
 	//
 	None,
 
-	/// visibility: hidden
+	/// visibility: hidden, display: block
 	//
 	Hidden,
 
@@ -69,6 +74,12 @@ impl Control
 	}
 
 
+	pub fn all_have_filters( &self ) -> bool
+	{
+		self.columns.len() == self.filters.len()
+	}
+
+
 	/// Process a filter change. Returns a hashmap with other columns that need to
 	/// recalculate lines that where display: none vs visibility: hidden.
 	///
@@ -82,35 +93,37 @@ impl Control
 		all_have_filters: bool                   ,
 	)
 
-		-> HashMap< usize, bool >
+		-> bool
 	{
-		let mut columns_to_update = HashMap::new();
-
+		let mut update_others = false;
 
 		// Nothing to filter if no text has yet been set.
 		//
 		let text = match &lines
 		{
-			None    => return columns_to_update ,
-			Some(v) => v                        ,
+			None    => return update_others ,
+			Some(v) => v                    ,
 		};
 
 
-		let mut vis = Vec::with_capacity( text.len() );
-
-		// The other columns visibility settings.
+		// We take the show information for the column who's filter changed out of the
+		// hashmap, so we can also operate on the other columns. At the end we will put
+		// it back.
 		//
-		let mut others: Vec<(usize, &mut Vec<Show>)> = Vec::with_capacity( show.len() );
+		// If it doesnt exist yet, we create a new one.
+		//
+		let mut vis =
 
-		for (k, v) in show.iter_mut()
-		{
-			if *k != filter.id
+			if   let Some( v ) = show.remove( &filter.id ) { v }
+
+
+			else
 			{
-				others.push( (*k,v) );
+				// this is silly, but we have to initialize to do index access below.
+				//
+				vec![ Show::Visible; text.len() ]
 			}
-
-		}
-
+		;
 
 
 		// for each line
@@ -123,7 +136,7 @@ impl Control
 			{
 				true =>
 				{
-					vis.push( Show::Visible );
+					vis[i] = Show::Visible;
 
 					// We will be visible. Make sure no other column has this set to display:none.
 					// We only do cross column logic if every column has a filter set, since otherwise
@@ -131,12 +144,12 @@ impl Control
 					//
 					if all_have_filters
 					{
-						for other in &mut others
+						for other in show.values_mut()
 						{
-							if other.1[i] == Show::None
+							if other[i] == Show::None
 							{
-								other.1[i] = Show::Hidden;
-								columns_to_update.insert( other.0, true );
+								other[i] = Show::Hidden;
+								update_others = true;
 							}
 						}
 					}
@@ -151,35 +164,37 @@ impl Control
 					{
 						let mut display_none = true;
 
-						for other in &others
+						for other in show.values()
 						{
-							if other.1[i] == Show::Visible
+							if other[i] == Show::Visible
 							{
 								display_none = false;
 							}
 						}
 
+
+						// No other column shows it, use display: none.
+						//
 						if display_none
 						{
-							// nobody actually shows the line, display: none.
-							//
-							vis.push( Show::None );
+							vis[i] = Show::None;
 
-							for other in &mut others
+							for other in show.values_mut()
 							{
-								if other.1[i] == Show::Hidden
+								if other[i] == Show::Hidden
 								{
-									other.1[i] = Show::None;
-									columns_to_update.insert( other.0, true );
+									other[i] = Show::None;
+									update_others = true;
 								}
 							}
 						}
+
 
 						// some columns show the line.
 						//
 						else
 						{
-							vis.push( Show::Hidden );
+							vis[i] = Show::Hidden;
 						}
 					}
 
@@ -188,17 +203,59 @@ impl Control
 					//
 					else
 					{
-						vis.push( Show::Hidden );
+						vis[i] = Show::Hidden;
 					}
 				},
 			}
 		}
 
-		// drop( others );
 
 		show.insert( filter.id, vis );
+		update_others
+	}
 
-		columns_to_update
+
+	/// Recalculate the show information for all columns.
+	//
+	async fn update_all( &mut self )
+	{
+		let all_have_filters = self.all_have_filters();
+
+		// Generate show information for each column.
+		//
+		for col in self.columns.values_mut()
+		{
+			// If there are pre-existing filters, process the text.
+			//
+			if let Some(mut filter) = self.filters.get_mut( &col.id() )
+			{
+				// we ignore the return as we will update all columns anyway, since there is a new text.
+				//
+				let _ = Self::filter( &self.lines, &mut self.show, &mut filter, all_have_filters );
+			}
+		}
+
+
+		// update the text and show information for each column.
+		//
+		// It is important there are 2 loops, as processing a filter might change other columns.
+		//
+		for col in self.columns.values_mut()
+		{
+			let block = self.logview.as_ref().map( |logview|
+
+				logview
+					.clone_node_with_deep( true )
+					.expect_throw( "clone text" )
+					.unchecked_into()
+			);
+
+			let filter = self.show.get( &col.id() ).map( Clone::clone );
+
+			// Send the new text to each column with the last filter we have.
+			//
+			col.send( Update { block, filter	} ).await.expect_throw( "send textblock to column" );
+		}
 	}
 }
 
@@ -213,6 +270,8 @@ impl Handler<DelColumn> for Control
 		self.columns.remove( &msg.id );
 		self.show   .remove( &msg.id );
 		self.filters.remove( &msg.id );
+
+		self.update_all().await;
 	}
 
 	#[async_fn] fn handle( &mut self, _msg: DelColumn )

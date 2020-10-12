@@ -5,14 +5,14 @@ use crate::{ import::*, * };
 //
 pub struct Column
 {
-	parent         : HtmlElement   , // #columns
-	container      : HtmlElement   , // .column
-	columns        : Addr<Columns> ,
-	addr           : Option< Addr<Self> >    ,
-	control        : Addr<Control> ,
-	filter         : Filter        ,
-	nursery        : Nursery< Bindgen, () > ,
-	nursery_output : Option< JoinHandle<()> >,
+	parent         : HtmlElement              , // #columns
+	container      : HtmlElement              , // .column
+	columns        : Addr<Columns>            ,
+	addr           : Option< Addr<Self> >     ,
+	control        : Addr<Control>            ,
+	filter         : Filter                   ,
+	nursery        : Nursery< Bindgen, () >   ,
+	nursery_output : Option< JoinHandle<()> > ,
 }
 
 
@@ -26,28 +26,18 @@ impl Column
 		let (nursery, nursery_output) = Nursery::new( Bindgen );
 
 		let nursery_output = Some( Bindgen.spawn_handle( nursery_output ).expect_throw( "spawn nursery_output" ) );
-
-		let filter = Filter
-		{
-			id: addr.id(),
-			trace: true,
-			debug: true,
-			info : true,
-			warn : true,
-			error: true,
-			txt  : String::new(),
-		};
+		let filter         = Filter::new( addr.id() );
 
 		Self
 		{
-			parent    ,
-			container ,
-			addr: Some(addr)      ,
-			columns   ,
-			control   ,
-			filter    ,
-			nursery   ,
-			nursery_output ,
+			addr: Some(addr)  ,
+			parent            ,
+			container         ,
+			columns           ,
+			control           ,
+			filter            ,
+			nursery           ,
+			nursery_output    ,
 		}
 	}
 

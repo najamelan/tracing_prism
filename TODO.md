@@ -10,12 +10,26 @@
 - perf with big log files -> framerate drops dramatically with big log files.
   - Probably should use a web worker to offload the work (see wasm-thread)
   - only process parts of the text that are visible and handle the rest on demand on scroll
+  - currently we are naively recalculating everything and re-manipulating everything if anything might have changed.
+    eg. when removing a column, all other columns will run all filters again and manipulate the dom again even if
+    nothing has to change in their view. Surely this isn't the most performant approach.
 
 - json input
   - hover time
   - click to get more details
   - let the user customize which fields
 
-- rewrite logic for cross column hiding. Code is quite complicated right now, and we should probably just keep counters for each line keeping track of how many columns show it, and when they reach zero, update all colummns.
+  {
+    "timestamp": "Feb 08 20:06:03.705",
+    "level": "INFO",
+    "target": "async_std::task::builder",
+    "fields": {
+      "message": "spawn",
+      "log.target": "async_std::task::builder",
+      "log.module_path": "async_std::task::builder",
+      "log.file": "/home/user/.cargo/registry/src/github.com-1ecc6299db9ec823/async-std-1.5.0/src/task/builder.rs",
+      "log.line": 41
+    }
+  }
 
 

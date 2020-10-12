@@ -23,13 +23,12 @@ pub struct Entry
 {
 	pub lvl  : LogLevel ,
 	pub txt  : String   ,
-	pub shown: usize    ,
 }
 
 
 impl Entry
 {
-	pub fn new( txt: String, cols: usize ) -> Self
+	pub fn new( txt: String ) -> Self
 	{
 		let lvl =
 
@@ -41,7 +40,7 @@ impl Entry
 			else                              { LogLevel::Unknown }
 		;
 
-		Self { lvl, txt, shown: cols }
+		Self { lvl, txt }
 	}
 
 
@@ -69,5 +68,26 @@ impl Entry
 		}
 
 		show
+	}
+
+
+	pub fn html( &self ) -> HtmlElement
+	{
+		let p: HtmlElement = document().create_element( "p" ).expect_throw( "create p tag" ).unchecked_into();
+
+		let class = match self.lvl
+		{
+			LogLevel::Trace   => "trace"          ,
+			LogLevel::Debug   => "debug"          ,
+			LogLevel::Info    => "info"           ,
+			LogLevel::Warn    => "warn"           ,
+			LogLevel::Error   => "error"          ,
+			LogLevel::Unknown => "unknown_loglvl" ,
+		};
+
+		p.class_list().add_1( class ).expect_throw( "add class to p" );
+		p.set_inner_text( &self.txt );
+
+		p
 	}
 }
