@@ -32,12 +32,12 @@ impl Entry
 	{
 		let lvl =
 
-			     if txt.contains( " TRACE " ) { LogLevel::Trace   }
-			else if txt.contains( " DEBUG " ) { LogLevel::Debug   }
-			else if txt.contains( " INFO "  ) { LogLevel::Info    }
-			else if txt.contains( " WARN "  ) { LogLevel::Warn    }
-			else if txt.contains( " ERROR " ) { LogLevel::Error   }
-			else                              { LogLevel::Unknown }
+			     if txt.contains( "TRACE " ) { LogLevel::Trace   }
+			else if txt.contains( "DEBUG " ) { LogLevel::Debug   }
+			else if txt.contains( "INFO "  ) { LogLevel::Info    }
+			else if txt.contains( "WARN "  ) { LogLevel::Warn    }
+			else if txt.contains( "ERROR " ) { LogLevel::Error   }
+			else                             { LogLevel::Unknown }
 		;
 
 		Self { lvl, txt }
