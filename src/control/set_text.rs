@@ -16,10 +16,18 @@ impl Handler<SetText> for Control
 	{
 		self.lines = Some( msg.text.lines().map( |txt|
 		{
-			Entry::new( txt.to_string() )
+			match JsonEntry::new( txt.to_string() )
+			{
+				Ok ( entry ) => entry,
+				err          =>
+				{
+					error!( "{}", txt );
+					err.expect_throw( "create json entry" );
+					panic!();
+				},
+			}
 
 		}).collect() );
-
 
 		let block: HtmlElement = document().create_element( "div" ).expect_throw( "create div tag" ).unchecked_into();
 		block.set_class_name( "logview" );
@@ -28,7 +36,6 @@ impl Handler<SetText> for Control
 		{
 			block.append_child( &line.html() ).expect_throw( "append p" );
 		}
-
 
 		// As we are setting a new text, make sure there are no more show filters around.
 		//

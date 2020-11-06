@@ -40,7 +40,7 @@ impl Handler<Filter> for Control
 		self.filters.insert( msg.id, msg.clone() );
 
 		let all    = self.all_have_filters();
-		let update = Self::filter( &self.lines, &mut self.show, &mut msg, all );
+		let update = Self::filter( &mut self.lines, &mut self.show, &mut msg, all );
 
 		let col = self.columns.get_mut( &msg.id ).expect_throw( "Handler<Filter>: column to exist" );
 

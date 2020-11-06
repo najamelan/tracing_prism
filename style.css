@@ -53,7 +53,7 @@ body
 }
 
 
-.logview p
+.logview p, .logview table
 {
 	margin: 0;
 	padding: .2rem 0;

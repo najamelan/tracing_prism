@@ -5,7 +5,8 @@ mod column;
 mod columns;
 mod control;
 mod e_handler;
-mod entry;
+// mod entry;
+mod json_entry;
 
 mod import
 {
@@ -24,6 +25,7 @@ mod import
 		futures         :: { task::LocalSpawnExt } ,
 		std             :: { task::*, pin::Pin, panic, collections::HashMap, sync::Arc, convert::TryInto  } ,
 		wasm_bindgen_futures :: { spawn_local, JsFuture                      } ,
+		unicase         :: { UniCase                        } ,
 	};
 }
 
@@ -33,7 +35,8 @@ use
 	columns   :: { * } ,
 	control   :: { * } ,
 	e_handler :: { * } ,
-	entry     :: { * } ,
+// 	entry     :: { * } ,
+	json_entry:: { * } ,
 };
 
 

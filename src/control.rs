@@ -52,7 +52,7 @@ pub enum Show
 pub struct Control
 {
 	logview: Option < HtmlElement         > ,
-	lines  : Option < Vec<Entry>          > ,
+	lines  : Option < Vec<JsonEntry>      > ,
 	show   : HashMap< usize, Vec<Show>    > ,
 	columns: HashMap< usize, Addr<Column> > ,
 	filters: HashMap< usize, Filter       > ,
@@ -87,7 +87,7 @@ impl Control
 	//
 	pub fn filter
 	(
-		lines : &Option< Vec<Entry> >            ,
+		mut lines : &mut Option< Vec<JsonEntry> >    ,
 		show  : &mut HashMap< usize, Vec<Show> > ,
 		filter: &mut Filter                      ,
 		all_have_filters: bool                   ,
@@ -99,7 +99,7 @@ impl Control
 
 		// Nothing to filter if no text has yet been set.
 		//
-		let text = match &lines
+		let text = match &mut lines
 		{
 			None    => return update_others ,
 			Some(v) => v                    ,
@@ -128,7 +128,7 @@ impl Control
 
 		// for each line
 		//
-		for (i, e) in text.iter().enumerate()
+		for (i, e) in text.iter_mut().enumerate()
 		{
 			// check whether we show or not according to filter
 			//
@@ -231,7 +231,7 @@ impl Control
 			{
 				// we ignore the return as we will update all columns anyway, since there is a new text.
 				//
-				let _ = Self::filter( &self.lines, &mut self.show, &mut filter, all_have_filters );
+				let _ = Self::filter( &mut self.lines, &mut self.show, &mut filter, all_have_filters );
 			}
 		}
 

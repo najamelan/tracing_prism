@@ -2,7 +2,7 @@
 
 :root
 {
-	--background    : #0f1319;
+	--background    : #202429;
 	--bg-darker     : #090c12;
 	--warn          : #ff8f2d;
 	--debug         : #39bae6;
@@ -58,7 +58,7 @@ body, html
 	background: var( --bg-darker );
 }
 
-.logview > p:nth-child(even)
+.logview > p:nth-child(even), .logview > table:nth-child(even)
 {
 	background: var( --background );
 }
