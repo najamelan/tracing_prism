@@ -1,31 +1,31 @@
 use crate::{ *, import::* };
 
-#[ derive( Debug, Clone, PartialEq, Eq ) ]
+#[ derive( Debug, Clone ) ]
 //
 pub struct Filter
 {
-	pub id   : usize  ,
-	pub txt  : String ,
-	pub trace: bool   ,
-	pub debug: bool   ,
-	pub info : bool   ,
-	pub warn : bool   ,
-	pub error: bool   ,
+	pub id   : usize         ,
+	pub regex: Option<Regex> ,
+	pub trace: bool          ,
+	pub debug: bool          ,
+	pub info : bool          ,
+	pub warn : bool          ,
+	pub error: bool          ,
 }
 
 impl Filter
 {
-	pub fn new( id: usize ) -> Self
+	pub fn new( id: usize,  ) -> Self
 	{
 		Self
 		{
-			id                   ,
-			txt  : String::new() ,
-			trace: true          ,
-			debug: true          ,
-			info : true          ,
-			warn : true          ,
-			error: true          ,
+			id          ,
+			regex: None ,
+			trace: true ,
+			debug: true ,
+			info : true ,
+			warn : true ,
+			error: true ,
 		}
 	}
 }

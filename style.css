@@ -42,7 +42,7 @@ body
 
 .column
 {
-	padding: .5vw;
+	padding: .5vw 1px;
 	min-width: 18rem;
 }
 
@@ -53,11 +53,12 @@ body
 }
 
 
-.logview p, .logview table
+.entry
 {
-	margin: 0;
-	padding: .2rem 0;
+	margin     : 0;
+	padding    : .2rem;
 	font-family: "Source Code Pro", Consolas, monospace;
+	width      : 100%;
 }
 
 
@@ -117,6 +118,18 @@ body
 {
 	font-weight: normal;
 }
+
+
+.entry.hidden > *
+{
+	visibility: hidden;
+}
+
+.display_none
+{
+	display: none;
+}
+
 
 
 

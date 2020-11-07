@@ -2,7 +2,7 @@
 
 :root
 {
-	--background    : #202429;
+	--background    : #151C25;
 	--bg-darker     : #090c12;
 	--warn          : #ff8f2d;
 	--debug         : #39bae6;
@@ -37,8 +37,8 @@
 
 body, html
 {
-	background: var( --background ) !important;
-	color     : var( --foreground ) !important;
+	background: var( --background );
+	color     : var( --foreground );
 }
 
 
@@ -58,10 +58,6 @@ body, html
 	background: var( --bg-darker );
 }
 
-.logview > p:nth-child(even), .logview > table:nth-child(even)
-{
-	background: var( --background );
-}
 
 button
 {
@@ -117,4 +113,28 @@ button
 , .button-error.hide
 {
 	color: var( --button-border );
+}
+
+
+
+  .entry > p
+, .entry > table td
+{
+	color: inherit;
+}
+
+
+/*
+ * Color every second row, ignoring hidden items:
+ * https://blog.blackbam.at/2015/04/09/css-nth-child-selector-ignore-hidden-element/
+ */
+
+.entry
+{
+	background: var( --bg-darker );
+}
+
+.entry.odd
+{
+	background: var( --background );
 }
