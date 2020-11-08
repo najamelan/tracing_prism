@@ -42,10 +42,9 @@ impl Handler<Render> for Column
 
 		let del_col  = self.find( ".button-close" );
 		let del_evts = EHandler::new( &del_col, "click", true );
-		let task     = Column::on_delcol( del_evts, addr );
+		let task     = Column::on_delcol( del_evts, addr.clone() );
 
 		self.nursery.spawn_local( task ).expect_throw( "Handler<Render> for Column - spawn close" );
-
 
 		self.toggle_button::<Collapse>( ".button-collapse" );
 

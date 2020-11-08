@@ -32,9 +32,11 @@ impl Handler<SetText> for Control
 		let block: HtmlElement = document().create_element( "div" ).expect_throw( "create div tag" ).unchecked_into();
 		block.set_class_name( "logview" );
 
-		for line in self.lines.as_ref().unwrap()
+		for (i, line) in self.lines.as_ref().unwrap().iter().enumerate()
 		{
-			block.append_child( &line.html() ).expect_throw( "append p" );
+			let div = line.html();
+			div.set_id( &format!("e{}", i) );
+			block.append_child( &div ).expect_throw( "append p" );
 		}
 
 		// As we are setting a new text, make sure there are no more show filters around.

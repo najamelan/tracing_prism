@@ -89,7 +89,10 @@ impl JsonEntry
 
 		let msg = if let Some(Value::String(s)) = map.remove( "message" )
 		{
-			s
+			let value  = map.remove( "target" ).expect_throw( "there to be a target" );
+			let target = value.as_str().expect_throw( "target to be" );
+
+			format!( "{}: {}", target, s )
 		}
 
 		else
@@ -217,10 +220,11 @@ impl JsonEntry
 			LogLevel::Unknown => "unknown_loglvl" ,
 		};
 
-		div.class_list().add_1( "entry" ).expect_throw( "add entry to div" );
-		div.class_list().add_1( class   ).expect_throw( "add class to div" );
-		p  .class_list().add_1( class   ).expect_throw( "add class to p"   );
-		t  .class_list().add_1( class   ).expect_throw( "add class to t"   );
+		div.class_list().add_1( "entry"        ).expect_throw( "add entry to div" );
+		div.class_list().add_1( class          ).expect_throw( "add class to div" );
+		p  .class_list().add_1( class          ).expect_throw( "add class to p"   );
+		t  .class_list().add_1( class          ).expect_throw( "add class to t"   );
+		t  .class_list().add_1( "display_none" ).expect_throw( "add class to t"   );
 
 		for key in self.keys()
 		{

@@ -26,6 +26,7 @@ mod import
 		std             :: { task::*, pin::Pin, panic, collections::HashMap, sync::Arc, convert::TryInto  } ,
 		wasm_bindgen_futures :: { spawn_local, JsFuture                      } ,
 		regex           :: { Regex                          } ,
+		send_wrapper    :: { SendWrapper                    } ,
 	};
 }
 

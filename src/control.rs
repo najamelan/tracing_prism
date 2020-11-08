@@ -3,12 +3,14 @@ use crate::{ *, import::*, column::Column };
 mod filter      ;
 mod init_column ;
 mod set_text    ;
+mod toggle_entry;
 
 pub use
 {
 	filter      :: *,
 	init_column :: *,
 	set_text    :: *,
+	toggle_entry:: *,
 };
 
 

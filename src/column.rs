@@ -3,16 +3,20 @@ use crate::{ import::*, * };
 mod change_filter;
 mod collapse;
 mod del_column;
+mod entry_click;
 mod render;
 mod toggle;
+mod toggle_entry;
 mod update;
 
 
 pub use change_filter::*;
 pub use collapse     ::*;
 pub use del_column   ::*;
+pub use entry_click  ::*;
 pub use render       ::*;
 pub use toggle       ::*;
+pub use toggle_entry ::*;
 pub use update       ::*;
 
 
@@ -153,6 +157,23 @@ impl Column
 	}
 
 
+	// TODO: can we leak memory? Eg. does the event listener get dropped when the element gets
+	// removed from the dom?
+	//
+	async fn on_click_entry
+	(
+		mut evts: impl Stream< Item=Event > + Unpin ,
+		mut column: Addr<Column>,
+	)
+	{
+		while let Some(evt) = evts.next().await
+		{
+			let evt = SendWrapper::new( evt );
+			column.call( EntryClick{ evt } ).await.expect_throw( "send EntryClick" );
+		}
+	}
+
+
 	/// Set's up the event handlers for the loglevel filter buttons.
 	//
 	fn toggle_button<M>( &mut self, elem: &str )
@@ -167,11 +188,8 @@ impl Column
 		let task = async move
 		{
 			evts.forward( addr ).await.expect_throw( &format!( "send {:?}", M::default() ) );
-			debug!( "drop ehandler" );
 		};
 
-		// TODO: use nursery and make sure we don't leak when the column is removed.
-		//
 		self.nursery.spawn_local( task ).expect_throw( "Column::toggle_button - spawn" );
 	}
 }

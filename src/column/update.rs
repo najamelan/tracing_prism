@@ -74,6 +74,12 @@ impl Handler<Update> for Column
 				}
 			}
 
+
+			let logview_evts = EHandler::new( &block, "click", true );
+			let task         = Column::on_click_entry( logview_evts, self.addr.clone().expect_throw( "have addr" ) );
+
+			self.nursery.spawn_local( task ).expect_throw( "click evts on logview" );
+
 			self.container.append_child( &block ).expect_throw( "append div" );
 		}
 
