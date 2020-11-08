@@ -37,7 +37,7 @@
 
 body, html
 {
-	background: var( --background );
+	background: var( --bg-darker );
 	color     : var( --foreground );
 }
 
@@ -129,10 +129,6 @@ button
  * https://blog.blackbam.at/2015/04/09/css-nth-child-selector-ignore-hidden-element/
  */
 
-.entry
-{
-	background: var( --bg-darker );
-}
 
 .entry.odd
 {

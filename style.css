@@ -1,7 +1,6 @@
 body
 {
 	display: grid;
-	height: 100%;
 	grid-template-rows: auto minmax(0, 1fr);
 	margin: 0;
 	font-family: Montserrat, verdana;
@@ -42,23 +41,31 @@ body
 
 .column
 {
-	padding: .5vw 1px;
+	padding: .2rem 0;
 	min-width: 18rem;
 }
 
 
 .logview
 {
-	padding-top: 2vh;
+	padding-top: 3px;
 }
 
 
 .entry
 {
 	margin     : 0;
-	padding    : .2rem;
+	padding    : .3rem 0 .3rem 1%;
 	font-family: "Source Code Pro", Consolas, monospace;
-	width      : 100%;
+	width      : 99%;
+}
+
+
+.entry p
+{
+	margin     : 0;
+	padding    : 0;
+
 }
 
 
