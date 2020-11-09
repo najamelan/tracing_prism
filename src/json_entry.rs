@@ -229,12 +229,15 @@ impl JsonEntry
 		let colgroup: HtmlElement = document().create_element( "colgroup" ).expect_throw( "create colgroup tag" ).unchecked_into();
 		let col1    : HtmlElement = document().create_element( "col"      ).expect_throw( "create col      tag" ).unchecked_into();
 		let col2    : HtmlElement = document().create_element( "col"      ).expect_throw( "create col      tag" ).unchecked_into();
+		let col3    : HtmlElement = document().create_element( "col"      ).expect_throw( "create col      tag" ).unchecked_into();
 
-		col1.class_list().add_1( "field-keys"   ).expect_throw( "add field-keys class to col" );
-		col2.class_list().add_1( "field-values" ).expect_throw( "add field-keys class to col" );
+		col1.class_list().add_1( "field-keys"       ).expect_throw( "add field-keys class to col" );
+		col2.class_list().add_1( "field-separators" ).expect_throw( "add field-keys class to col" );
+		col3.class_list().add_1( "field-values"     ).expect_throw( "add field-keys class to col" );
 
 		colgroup.append_child( &col1 ).expect_throw( "append col1" );
-		colgroup.append_child( &col2 ).expect_throw( "append col1" );
+		colgroup.append_child( &col2 ).expect_throw( "append col2" );
+		colgroup.append_child( &col3 ).expect_throw( "append col3" );
 
 		t.append_child( &colgroup ).expect_throw( "append colgroup" );
 

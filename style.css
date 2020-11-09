@@ -164,6 +164,12 @@ body
 	white-space: nowrap;
 }
 
+.field-separators
+{
+	width: 1%;
+	white-space: nowrap;
+}
+
 .field-key, .field-separator
 {
 	vertical-align: top;
