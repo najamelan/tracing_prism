@@ -49,6 +49,13 @@ body
 .logview
 {
 	padding-top: 3px;
+	font-size: .8rem;
+}
+
+
+.logview table
+{
+	font-size: .8rem;
 }
 
 
