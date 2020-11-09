@@ -22,6 +22,15 @@ impl Handler<Render> for Column
 
 		controls.set_class_name( "col-controls" );
 
+		let searchbox: HtmlElement = controls
+
+			.query_selector( ".filter-input" )
+			.expect_throw( "find .filter-input" )
+			.expect_throw( "find .filter-input" )
+			.unchecked_into()
+		;
+
+		searchbox.set_tab_index( addr.id() as i32 );
 
 		self.container.append_child( &controls       ).expect_throw( "append filter" );
 		self.parent   .append_child( &self.container ).expect_throw( "append column" );
@@ -31,7 +40,7 @@ impl Handler<Render> for Column
 			.await.expect_throw( "send init column" );
 
 		// Set event listeners on buttons
-		// TODO: use drop channel
+		// TODO: use drop channel?
 		//
 		let filter      = self.find( ".filter-input" );
 		let filter_evts = EHandler::new( &filter, "input", true );

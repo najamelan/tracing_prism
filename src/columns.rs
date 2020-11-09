@@ -25,8 +25,8 @@ impl Columns
 
 		for _ in 0..number
 		{
-			let     (addr, mb)    = Addr::builder().build();
-			let     col           = Column::new( container.clone(), addr.clone(), addr_columns.clone(), addr_control.clone() );
+			let (addr, mb) = Addr::builder().build();
+			let col        = Column::new( container.clone(), addr.clone(), addr_columns.clone(), addr_control.clone() );
 
 			children.insert( addr.id(), addr.clone() );
 
