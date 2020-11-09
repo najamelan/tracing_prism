@@ -226,22 +226,51 @@ impl JsonEntry
 		t  .class_list().add_1( class          ).expect_throw( "add class to t"   );
 		t  .class_list().add_1( "display_none" ).expect_throw( "add class to t"   );
 
+		let colgroup: HtmlElement = document().create_element( "colgroup" ).expect_throw( "create colgroup tag" ).unchecked_into();
+		let col1    : HtmlElement = document().create_element( "col"      ).expect_throw( "create col      tag" ).unchecked_into();
+		let col2    : HtmlElement = document().create_element( "col"      ).expect_throw( "create col      tag" ).unchecked_into();
+
+		col1.class_list().add_1( "field-keys"   ).expect_throw( "add field-keys class to col" );
+		col2.class_list().add_1( "field-values" ).expect_throw( "add field-keys class to col" );
+
+		colgroup.append_child( &col1 ).expect_throw( "append col1" );
+		colgroup.append_child( &col2 ).expect_throw( "append col1" );
+
+		t.append_child( &colgroup ).expect_throw( "append colgroup" );
+
 		for key in self.keys()
 		{
 			let tr : HtmlElement = document().create_element( "tr" ).expect_throw( "create tr tag" ).unchecked_into();
 			let td : HtmlElement = document().create_element( "td" ).expect_throw( "create td tag" ).unchecked_into();
 			let td2: HtmlElement = document().create_element( "td" ).expect_throw( "create td tag" ).unchecked_into();
+			let td3: HtmlElement = document().create_element( "td" ).expect_throw( "create td tag" ).unchecked_into();
 
-			td .set_inner_text( key );
+			td.set_inner_text( key );
+			td.class_list().add_1( "field-key" ).expect_throw( "add field-key class" );
 
+			td2.set_inner_text( ": " );
+			td2.class_list().add_1( "field-separator" ).expect_throw( "add field-key class" );
 
 			let value = self.get(key).expect_throw( "keys to exist" );
-			let s     = serde_json::to_string( &value ).expect_throw( "serialize serde_json::Value" );
 
-			td2.set_inner_text( &s );
+			let s = match &value
+			{
+				// spaces after the colon are non-breaking spaces.
+				//
+				Value::Null       => "null".to_string()                                        ,
+				Value::String (s) => format!( "{}"  , s )                                      ,
+				Value::Number (n) => format!( "{}"  , n )                                      ,
+				Value::Bool   (b) => format!( "{}"  , b )                                      ,
+				Value::Array  (a) => serde_json::to_string(a).expect_throw( "stringify json" ) ,
+				Value::Object (o) => serde_json::to_string(o).expect_throw( "stringify json" ) ,
+			};
+
+			td3.set_inner_text( &s );
+			td3.class_list().add_1( "field-value" ).expect_throw( "add field-key class" );
 
 			tr.append_child( &td  ).expect_throw( "append_child to tr" );
 			tr.append_child( &td2 ).expect_throw( "append_child to tr" );
+			tr.append_child( &td3 ).expect_throw( "append_child to tr" );
 
 			t.append_child( &tr ).expect_throw( "append_child to table" );
 		}

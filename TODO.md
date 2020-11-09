@@ -2,6 +2,7 @@
 
 - graphical design!!! Make something beautiful.
   - link to source code
+  - arrays and objects in field values are still using quotes.
 
 - when filters change, if the user is scrolled down, it might liberate space above. However we don't want any currently visible text to move up out of view. Will be easier when we associate the view with a time line by showing time separately.
   https://stackoverflow.com/questions/9834143/jquery-keep-window-from-changing-scroll-position-while-prepending-items-to-a-l

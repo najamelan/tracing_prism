@@ -149,5 +149,17 @@ body
 }
 
 
+/* The table of fields */
+
+.field-keys
+{
+	width: 5%;
+	white-space: nowrap;
+}
+
+.field-key, .field-separator
+{
+	vertical-align: top;
+}
 
 
