@@ -7,6 +7,7 @@ mod control;
 mod e_handler;
 // mod entry;
 mod json_entry;
+mod util;
 
 mod import
 {
@@ -30,6 +31,7 @@ mod import
 	};
 }
 
+
 use
 {
 	column    :: { * } ,
@@ -38,6 +40,7 @@ use
 	e_handler :: { * } ,
 // 	entry     :: { * } ,
 	json_entry:: { * } ,
+	util      :: { * } ,
 };
 
 
@@ -52,11 +55,6 @@ pub async fn main()
 {
 	wasm_logger::init( wasm_logger::Config::new( log::Level::Trace ) );
 
-
-	let window   = web_sys::window  ().expect_throw( "no global `window` exists"        );
-	let document = window  .document().expect_throw( "should have a document on window" );
-
-
 	let upload = get_id( "upload" );
 
 	let file_evts = EHandler::new( &upload, "change", true );
@@ -65,8 +63,7 @@ pub async fn main()
 	let add_evts = EHandler::new( &add_col, "click", true );
 
 
-	let column_cont = document.get_element_by_id( "columns" ).expect_throw( "doc should have columns element" ).unchecked_into();
-
+	let column_cont  = get_id( "columns" );
 	let addr_control = Addr::builder().start_local( Control::new(), &Bindgen ).expect_throw( "spawn control" );
 
 	let (addr_columns, mb_columns) = Addr::builder().build();
@@ -79,25 +76,6 @@ pub async fn main()
 	spawn_local( on_addcol( add_evts , addr_columns ) );
 }
 
-
-
-
-/// Get the document node
-//
-pub fn document() -> Document
-{
-	let window = web_sys::window().expect_throw( "no global `window` exists");
-
-	window.document().expect_throw( "should have a document on window" )
-}
-
-
-/// GetElementById
-//
-fn get_id( id: &str ) -> HtmlElement
-{
-	document().get_element_by_id( id ).expect_throw( &format!( "find {}", id ) ).unchecked_into()
-}
 
 
 

@@ -17,6 +17,15 @@ impl Handler<EntryClick> for Column
 {
 	#[async_fn_local] fn handle_local( &mut self, msg: EntryClick )
 	{
+		if let Some(selection) = document().get_selection().expect_throw( "get_selection" )
+		{
+			if selection.type_() == "Range"
+			{
+				return;
+			}
+		}
+
+
 		let mut target: HtmlElement = msg.evt.target().expect_throw( "event has target" ).dyn_into().expect( "HtmlElement" );
 
 		// We can click between entries and thus end up on the logview. In that case disregard the click.
