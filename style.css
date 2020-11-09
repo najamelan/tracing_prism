@@ -58,6 +58,7 @@ body
 	padding    : .3rem 0 .3rem 1%;
 	font-family: "Source Code Pro", Consolas, monospace;
 	width      : 99%;
+	border-radius: 3px;
 }
 
 
@@ -66,6 +67,16 @@ body
 	margin     : 0;
 	padding    : 0;
 
+}
+
+.entry table
+{
+	width: 98%;
+	padding: .2rem;
+	border-top: 1px dashed gray;
+	border-bottom: 1px dashed gray;
+	margin-top: .4rem;
+	border-radius: .8rem;
 }
 
 
