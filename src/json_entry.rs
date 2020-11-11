@@ -27,6 +27,7 @@ pub struct JsonEntry
 	pub value_txt: Option<String> ,
 	pub lvl      : LogLevel       ,
 	pub msg      : String         ,
+	pub target   : String         ,
 }
 
 
@@ -85,23 +86,24 @@ impl JsonEntry
 
 		// We don't print level, but represent it with colors.
 		//
-		map.remove( "level"           );
+		map.remove( "level" );
 
-		let msg = if let Some(Value::String(s)) = map.remove( "message" )
+
+		let msg = match map.remove( "message" )
 		{
-			let value  = map.remove( "target" ).expect_throw( "there to be a target" );
-			let target = value.as_str().expect_throw( "target to be" );
+			Some(Value::String(s)) => format!( " ~ {}", s ),
+			_ => panic!( "every log entry to have a message" ),
+		};
 
-			format!( "{}: {}", target, s )
-		}
-
-		else
+		let target = match map.remove( "target" )
 		{
-			panic!( "every log entry to have a message" );
+			Some(Value::String(s)) => s,
+			_ => panic!( "every log entry to have a target" ),
 		};
 
 
-		Ok( Self { value, value_txt: None, lvl, msg } )
+
+		Ok( Self { value, value_txt: None, lvl, msg, target } )
 	}
 
 
@@ -206,9 +208,11 @@ impl JsonEntry
 
 	pub fn html( &self ) -> HtmlElement
 	{
-		let div: HtmlElement = document().create_element( "div"   ).expect_throw( "create div tag"   ).unchecked_into();
-		let p  : HtmlElement = document().create_element( "p"     ).expect_throw( "create p tag"     ).unchecked_into();
-		let t  : HtmlElement = document().create_element( "table" ).expect_throw( "create table tag" ).unchecked_into();
+		let div   : HtmlElement = document().create_element( "div"   ).expect_throw( "create div tag"   ).unchecked_into();
+		let p     : HtmlElement = document().create_element( "p"     ).expect_throw( "create p tag"     ).unchecked_into();
+		let target: HtmlElement = document().create_element( "span"  ).expect_throw( "create span tag"  ).unchecked_into();
+		let msg   : HtmlElement = document().create_element( "span"  ).expect_throw( "create span tag"  ).unchecked_into();
+		let t     : HtmlElement = document().create_element( "table" ).expect_throw( "create table tag" ).unchecked_into();
 
 		let class = match self.lvl()
 		{
@@ -220,9 +224,11 @@ impl JsonEntry
 			LogLevel::Unknown => "unknown_loglvl" ,
 		};
 
-		div.class_list().add_1( "entry"        ).expect_throw( "add entry to div" );
-		div.class_list().add_1( class          ).expect_throw( "add class to div" );
-		p  .class_list().add_1( class          ).expect_throw( "add class to p"   );
+		div   .class_list().add_1( "entry"   ).expect_throw( "add entry to div"  );
+		div   .class_list().add_1( class     ).expect_throw( "add class to div"  );
+		p     .class_list().add_1( class     ).expect_throw( "add class to p"    );
+		target.class_list().add_1( "target"  ).expect_throw( "add class to span" );
+		msg   .class_list().add_1( "message" ).expect_throw( "add class to span" );
 
 		// TODO: we really shouldn't have to put the class on the table, but somehow some CSS didn't stick.
 		//
@@ -287,11 +293,13 @@ impl JsonEntry
 			t.append_child( &tr ).expect_throw( "append_child to table" );
 		}
 
+		msg   .set_inner_text( &self.msg    );
+		target.set_inner_text( &self.target );
 
-		p.set_inner_text( &self.msg );
-
-		div.append_child( &p ).expect_throw( "append_child to div" );
-		div.append_child( &t ).expect_throw( "append_child to div" );
+		p  .append_child( &target ).expect_throw( "append_child to p"   );
+		p  .append_child( &msg    ).expect_throw( "append_child to p"   );
+		div.append_child( &p      ).expect_throw( "append_child to div" );
+		div.append_child( &t      ).expect_throw( "append_child to div" );
 
 		div
 	}

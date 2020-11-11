@@ -159,6 +159,11 @@ body
 }
 
 
+.target
+{
+	font-style: italic;
+}
+
 /* The table of fields */
 
 .field-keys
