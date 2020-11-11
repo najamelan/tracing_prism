@@ -1,5 +1,9 @@
 # TODO
 
+- re-enable plain text
+- cargo integration
+- performance
+
 - graphical design!!! Make something beautiful.
   - link to source code
   - arrays and objects in field values are still using quotes.
@@ -17,7 +21,6 @@
 
 - json input
   - hover time
-  - click to get more details
   - let the user customize which fields
 
   {

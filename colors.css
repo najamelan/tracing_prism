@@ -134,3 +134,10 @@ button
 {
 	background: var( --background );
 }
+
+
+#timestamp
+{
+	background: var( --bg-darker );
+	border-color: var( --warn );
+}

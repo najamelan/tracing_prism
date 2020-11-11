@@ -89,6 +89,9 @@ body
 
 #columns
 {
+	/* Needed for #timestamp which has position: absolute.
+	*/
+	position: relative;
 	display: grid;
 	grid-auto-flow: column;
 	grid-gap: 0.3vw;
@@ -174,5 +177,17 @@ body
 {
 	vertical-align: top;
 }
+
+#timestamp
+{
+	font-size    : 0.8rem;
+	position     : fixed;
+	bottom       : 0;
+	padding      : 0.4rem;
+	border       : solid 1px;
+	border-radius: 5px;
+	width        :max-content;
+}
+
 
 

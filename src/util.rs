@@ -22,3 +22,17 @@ pub fn window() -> Window
 {
 	web_sys::window().expect_throw( "no global `window` exists" )
 }
+
+
+pub fn is_text_selected() -> bool
+{
+	if let Some(selection) = document().get_selection().expect_throw( "get_selection" )
+	{
+		if selection.type_() == "Range"
+		{
+			return true;
+		}
+	}
+
+	false
+}

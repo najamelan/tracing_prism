@@ -17,47 +17,15 @@ impl Handler<EntryClick> for Column
 {
 	#[async_fn_local] fn handle_local( &mut self, msg: EntryClick )
 	{
-		if let Some(selection) = document().get_selection().expect_throw( "get_selection" )
+		if is_text_selected() { return; }
+
+
+		if let Some(entry) = self.find_entry( msg.evt.target().expect_throw( "event has target" ) )
 		{
-			if selection.type_() == "Range"
-			{
-				return;
-			}
+			let id = entry.id();
+
+			self.control.send( ToggleEntry{ id } ).await.expect_throw( "send" );
 		}
-
-
-		let mut target: HtmlElement = msg.evt.target().expect_throw( "event has target" ).dyn_into().expect( "HtmlElement" );
-
-		// We can click between entries and thus end up on the logview. In that case disregard the click.
-		//
-		if target.class_list().contains( "logview" ) { return; }
-
-
-		// target could be a descendant of entry, walk the tree.
-		//
-		if !target.class_list().contains( "entry" )
-		{
-			while let Some( element ) = target.parent_node()
-			{
-				let element: HtmlElement = element.dyn_into().expect( "HtmlElement" );
-
-				if target.class_list().contains( "logview" ) { return; }
-
-				if element.class_list().contains( "entry" )
-				{
-					target = element;
-
-					break;
-				}
-
-				target = element
-			}
-		}
-
-
-		let id = target.id();
-
-		self.control.send( ToggleEntry{ id } ).await.expect_throw( "send" );
 	}
 
 	#[async_fn] fn handle( &mut self, _msg: EntryClick )

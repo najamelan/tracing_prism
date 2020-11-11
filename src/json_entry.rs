@@ -223,6 +223,9 @@ impl JsonEntry
 		div.class_list().add_1( "entry"        ).expect_throw( "add entry to div" );
 		div.class_list().add_1( class          ).expect_throw( "add class to div" );
 		p  .class_list().add_1( class          ).expect_throw( "add class to p"   );
+
+		// TODO: we really shouldn't have to put the class on the table, but somehow some CSS didn't stick.
+		//
 		t  .class_list().add_1( class          ).expect_throw( "add class to t"   );
 		t  .class_list().add_1( "display_none" ).expect_throw( "add class to t"   );
 
@@ -240,6 +243,7 @@ impl JsonEntry
 		colgroup.append_child( &col3 ).expect_throw( "append col3" );
 
 		t.append_child( &colgroup ).expect_throw( "append colgroup" );
+
 
 		for key in self.keys()
 		{
@@ -268,6 +272,11 @@ impl JsonEntry
 				Value::Object (o) => serde_json::to_string(o).expect_throw( "stringify json" ) ,
 			};
 
+			if key == "timestamp"
+			{
+				div.set_attribute( "data-time", &s ).expect_throw( "set data-time attribute" );
+			}
+
 			td3.set_inner_text( &s );
 			td3.class_list().add_1( "field-value" ).expect_throw( "add field-key class" );
 
@@ -277,6 +286,7 @@ impl JsonEntry
 
 			t.append_child( &tr ).expect_throw( "append_child to table" );
 		}
+
 
 		p.set_inner_text( &self.msg );
 

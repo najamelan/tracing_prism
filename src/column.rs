@@ -4,20 +4,22 @@ mod change_filter;
 mod collapse;
 mod del_column;
 mod entry_click;
+mod entry_mouse_over;
 mod render;
 mod toggle;
 mod toggle_entry;
 mod update;
 
 
-pub use change_filter::*;
-pub use collapse     ::*;
-pub use del_column   ::*;
-pub use entry_click  ::*;
-pub use render       ::*;
-pub use toggle       ::*;
-pub use toggle_entry ::*;
-pub use update       ::*;
+pub use change_filter    ::*;
+pub use collapse         ::*;
+pub use del_column       ::*;
+pub use entry_click      ::*;
+pub use entry_mouse_over ::*;
+pub use render           ::*;
+pub use toggle           ::*;
+pub use toggle_entry     ::*;
+pub use update           ::*;
 
 
 #[ derive( Actor ) ]
@@ -174,6 +176,23 @@ impl Column
 	}
 
 
+	// TODO: can we leak memory? Eg. does the event listener get dropped when the element gets
+	// removed from the dom?
+	//
+	async fn on_mouse_over_entry
+	(
+		mut evts: impl Stream< Item=Event > + Unpin ,
+		mut column: Addr<Column>,
+	)
+	{
+		while let Some(evt) = evts.next().await
+		{
+			let evt = SendWrapper::new( evt );
+			column.call( EntryMouseOver{ evt } ).await.expect_throw( "send EntryClick" );
+		}
+	}
+
+
 	/// Set's up the event handlers for the loglevel filter buttons.
 	//
 	fn toggle_button<M>( &mut self, elem: &str )
@@ -191,6 +210,40 @@ impl Column
 		};
 
 		self.nursery.spawn_local( task ).expect_throw( "Column::toggle_button - spawn" );
+	}
+
+
+	fn find_entry( &self, target: EventTarget ) -> Option<HtmlElement>
+	{
+		let mut target: HtmlElement = target.dyn_into().expect( "HtmlElement" );
+
+		// We can click between entries and thus end up on the logview. In that case disregard the click.
+		//
+		if target.class_list().contains( "logview" ) { return None; }
+
+
+		// target could be a descendant of entry, walk the tree.
+		//
+		if !target.class_list().contains( "entry" )
+		{
+			while let Some( element ) = target.parent_node()
+			{
+				let element: HtmlElement = element.dyn_into().expect( "HtmlElement" );
+
+				if target.class_list().contains( "logview" ) { return None; }
+
+				if element.class_list().contains( "entry" )
+				{
+					target = element;
+
+					break;
+				}
+
+				target = element
+			}
+		}
+
+		Some(target)
 	}
 }
 
