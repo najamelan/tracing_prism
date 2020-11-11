@@ -1,3 +1,15 @@
+@media (hover: none)
+{
+	/* custom css for devices where the primary input mechanism cannot hover
+	at all or cannot conveniently hover */
+
+	#timestamp
+	{
+		display: none;
+	}
+}
+
+
 body
 {
 	display: grid;
@@ -29,6 +41,19 @@ body
 	margin: 0;
 	margin-right: 1vw;
 	font-weight: normal;
+}
+
+
+#info
+{
+	float: right;
+	margin-top: .3rem;
+}
+
+
+#info img
+{
+	height: 1.5rem;
 }
 
 
