@@ -1,5 +1,26 @@
 use crate::{ import::*, * };
 
+mod change_filter;
+mod collapse;
+mod del_column;
+mod entry_click;
+mod entry_mouse_over;
+mod render;
+mod toggle;
+mod toggle_entry;
+mod update;
+
+
+pub use change_filter    ::*;
+pub use collapse         ::*;
+pub use del_column       ::*;
+pub use entry_click      ::*;
+pub use entry_mouse_over ::*;
+pub use render           ::*;
+pub use toggle           ::*;
+pub use toggle_entry     ::*;
+pub use update           ::*;
+
 
 #[ derive( Actor ) ]
 //
@@ -11,8 +32,10 @@ pub struct Column
 	addr           : Option< Addr<Self> >     ,
 	control        : Addr<Control>            ,
 	filter         : Filter                   ,
+	filter_txt     : String                   ,
 	nursery        : Nursery< Bindgen, () >   ,
 	nursery_output : Option< JoinHandle<()> > ,
+	format         : Option< TextFormat     > ,
 }
 
 
@@ -30,14 +53,16 @@ impl Column
 
 		Self
 		{
-			addr: Some(addr)  ,
-			parent            ,
-			container         ,
-			columns           ,
-			control           ,
-			filter            ,
-			nursery           ,
-			nursery_output    ,
+			addr: Some(addr)          ,
+			parent                    ,
+			container                 ,
+			columns                   ,
+			control                   ,
+			filter                    ,
+			filter_txt: String::new() ,
+			nursery                   ,
+			nursery_output            ,
+			format: None              ,
 		}
 	}
 
@@ -57,9 +82,10 @@ impl Column
 
 	/// Set's the classes to hide and display none on lines.
 	//
-	fn filter( &self, logview: &HtmlElement, filter: &Vec<Show> )
+	fn filter( &self, logview: &HtmlElement, filter: &[Show] )
 	{
 		let children = logview.children();
+		let mut odd  = true;
 
 		let mut i = 0;
 		let length = children.length();
@@ -67,25 +93,42 @@ impl Column
 		while i < length
 		{
 			let p: HtmlElement = children.item( i ).expect_throw( "get p" ).unchecked_into();
+			let class = p.class_list();
 
 			match filter[i as usize]
 			{
 				Show::None =>
 				{
-					p.style().set_property( "visibility", "hidden" ).expect_throw( "hide line" );
-					p.style().set_property( "display"   , "none"   ).expect_throw( "hide line" );
+					class.add_1( "hidden"       ).expect_throw( "add hidden class"       );
+					class.add_1( "display_none" ).expect_throw( "add display_none class" );
 				}
 
 				Show::Visible =>
 				{
-					p.style().set_property( "visibility", "visible" ).expect_throw( "hide line" );
-					p.style().set_property( "display"   , "block"   ).expect_throw( "hide line" );
+					class.remove_1( "hidden"       ).expect_throw( "remove hidden class"       );
+					class.remove_1( "display_none" ).expect_throw( "remove display_none class" );
+
+					match odd
+					{
+						true  => class.add_1   ( "odd" ).expect_throw( "add odd class"    ) ,
+						false => class.remove_1( "odd" ).expect_throw( "remove odd class" ) ,
+					}
+
+					odd ^= true; // .toggle()
 				}
 
 				Show::Hidden =>
 				{
-					p.style().set_property( "visibility", "hidden" ).expect_throw( "hide line" );
-					p.style().set_property( "display"   , "block"  ).expect_throw( "hide line" );
+					class.add_1   ( "hidden"       ).expect_throw( "add hidden class"          );
+					class.remove_1( "display_none" ).expect_throw( "remove display_none class" );
+
+					match odd
+					{
+						true  => class.add_1   ( "odd" ).expect_throw( "add odd class"    ) ,
+						false => class.remove_1( "odd" ).expect_throw( "remove odd class" ) ,
+					}
+
+					odd ^= true; // .toggle()
 				}
 			}
 
@@ -118,6 +161,40 @@ impl Column
 	}
 
 
+	// TODO: can we leak memory? Eg. does the event listener get dropped when the element gets
+	// removed from the dom?
+	//
+	async fn on_click_entry
+	(
+		mut evts: impl Stream< Item=Event > + Unpin ,
+		mut column: Addr<Column>,
+	)
+	{
+		while let Some(evt) = evts.next().await
+		{
+			let evt = SendWrapper::new( evt );
+			column.call( EntryClick{ evt } ).await.expect_throw( "send EntryClick" );
+		}
+	}
+
+
+	// TODO: can we leak memory? Eg. does the event listener get dropped when the element gets
+	// removed from the dom?
+	//
+	async fn on_mouse_over_entry
+	(
+		mut evts: impl Stream< Item=Event > + Unpin ,
+		mut column: Addr<Column>,
+	)
+	{
+		while let Some(evt) = evts.next().await
+		{
+			let evt = SendWrapper::new( evt );
+			column.call( EntryMouseOver{ evt } ).await.expect_throw( "send EntryClick" );
+		}
+	}
+
+
 	/// Set's up the event handlers for the loglevel filter buttons.
 	//
 	fn toggle_button<M>( &mut self, elem: &str )
@@ -132,468 +209,43 @@ impl Column
 		let task = async move
 		{
 			evts.forward( addr ).await.expect_throw( &format!( "send {:?}", M::default() ) );
-			debug!( "drop ehandler" );
 		};
 
-		// TODO: use nursery and make sure we don't leak when the column is removed.
-		//
 		self.nursery.spawn_local( task ).expect_throw( "Column::toggle_button - spawn" );
 	}
-}
 
 
-
-
-pub struct Render;
-
-impl Message for Render { type Return = (); }
-
-
-impl Handler<Render> for Column
-{
-	#[async_fn_local] fn handle_local( &mut self, _msg: Render )
+	fn find_entry( &self, target: EventTarget ) -> Option<HtmlElement>
 	{
-		let addr = self.addr.as_ref().expect_throw( "Column unwrap addr" ).clone();
-		let controls: HtmlElement = document().query_selector( ".col-controls.template" )
+		let mut target: HtmlElement = target.dyn_into().expect( "HtmlElement" );
 
-			.expect_throw( "find col-controls" )
-			.expect_throw( "find col-controls" )
-			.clone_node_with_deep( true )
-			.expect_throw( "clone filter" )
-			.unchecked_into()
-		;
-
-		controls.set_class_name( "col-controls" );
-
-
-		self.container.append_child( &controls       ).expect_throw( "append filter" );
-		self.parent   .append_child( &self.container ).expect_throw( "append column" );
-
-		self.control.send( InitColumn( addr.clone() ) )
-
-			.await.expect_throw( "send init column" );
-
-		// Set event listeners on buttons
-		// TODO: use drop channel
+		// We can click between entries and thus end up on the logview. In that case disregard the click.
 		//
-		let filter      = self.find( ".filter-input" );
-		let filter_evts = EHandler::new( &filter, "input", true );
-		let task        = Column::on_filter( filter_evts, addr.clone() );
-
-		self.nursery.spawn_local( task ).expect_throw( "Handler<Render> for Column - spawn filter" );
+		if target.class_list().contains( "logview" ) { return None; }
 
 
-		let del_col  = self.find( ".button-close" );
-		let del_evts = EHandler::new( &del_col, "click", true );
-		let task     = Column::on_delcol( del_evts, addr );
-
-		self.nursery.spawn_local( task ).expect_throw( "Handler<Render> for Column - spawn close" );
-
-
-		self.toggle_button::<Collapse>( ".button-collapse" );
-
-		self.toggle_button::<ToggleTrace>( ".button-trace" );
-		self.toggle_button::<ToggleDebug>( ".button-debug" );
-		self.toggle_button::<ToggleInfo >( ".button-info"  );
-		self.toggle_button::<ToggleWarn >( ".button-warn"  );
-		self.toggle_button::<ToggleError>( ".button-error" );
-	}
-
-
-	#[async_fn] fn handle( &mut self, _msg: Render )
-	{
-		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
-	}
-}
-
-
-pub struct Update
-{
-	pub block : Option< HtmlElement >,
-	pub filter: Option< Vec<Show>   >,
-}
-
-// TODO: use SendWrapper?
-//
-unsafe impl Send for Update {}
-
-
-impl Message for Update { type Return = (); }
-
-impl Handler<Update> for Column
-{
-	#[async_fn_local] fn handle_local( &mut self, msg: Update )
-	{
-		if let Some(block) = &msg.block
-		{
-			// if the element exists, remove it
-			// add the new one
-			// filter the new one.
-
-			if let Some(elem) = self.logview()
-			{
-				// Hopefully leak a bit less memory:
-				// https://stackoverflow.com/a/3785323
-				// needs some more research.
-				//
-				elem.set_inner_html( "" );
-				elem.remove();
-			}
-
-			// set display none if column is collapsed.
-			//
-			let controls = self.find( ".col-controls" );
-
-
-			if controls.class_list().contains( "collapsed" )
-			{
-				block.style().set_property( "display", "none" ).expect_throw( "set display none" );
-			}
-
-			if let Some(f) = msg.filter
-			{
-				self.filter( &block, &f );
-			}
-
-			self.container.append_child( &block ).expect_throw( "append div" );
-		}
-
-
-		else if let Some(f) = msg.filter
-		{
-			if let Some(logview) = self.logview()
-			{
-				logview.remove();
-				self.filter( &logview, &f );
-				self.container.append_child( &logview ).expect_throw( "Handler<Update> for Column - append logview");
-			}
-
-			else
-			{
-				// Control shouldn't send us filters unless there is text.
-				//
-				unreachable!();
-			}
-		}
-	}
-
-	#[async_fn] fn handle( &mut self, _msg: Update )
-	{
-		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
-	}
-}
-
-
-
-#[ derive( Debug, Default, Copy, Clone, PartialEq, Eq ) ]
-//
-pub struct DelColumn
-{
-	pub id: usize
-}
-
-impl Message for DelColumn { type Return = (); }
-
-
-impl Handler<DelColumn> for Column
-{
-	#[async_fn_local] fn handle_local( &mut self, msg: DelColumn )
-	{
-		// Stop processing input
+		// target could be a descendant of entry, walk the tree.
 		//
-		drop( self.nursery_output.take() );
-		drop( self.addr.take()           );
-
-		self.container.set_inner_html( "" );
-		self.container.remove();
-
-		self.columns.send( msg ).await.expect_throw( "send DelColumn to Columns" );
-		self.control.send( msg ).await.expect_throw( "send DelColumn to Control" );
-	}
-
-	#[async_fn] fn handle( &mut self, _msg: DelColumn )
-	{
-		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
-	}
-}
-
-
-
-#[ derive( Debug, Default, Copy, Clone ) ]
-//
-pub struct Collapse;
-
-impl Message for Collapse { type Return = (); }
-
-
-impl Handler<Collapse> for Column
-{
-	#[async_fn_local] fn handle_local( &mut self, _msg: Collapse )
-	{
-		// turn controls sideways
-		//
-		let controls = self.find( ".col-controls" );
-
-
-		if self.container.class_list().contains( "collapsed" )
+		if !target.class_list().contains( "entry" )
 		{
-			self.container.class_list().remove_1( "collapsed" ).expect_throw( "remove collapsed class" );
-
-			// set with of column to height of controls
-			//
-			self.container.style().set_property( "width", "auto" ).expect_throw( "set width" );
-
-
-			if let Some( logview ) = self.logview()
+			while let Some( element ) = target.parent_node()
 			{
-				logview.style().set_property( "display", "block" ).expect_throw( "set display block" );
+				let element: HtmlElement = element.dyn_into().expect( "HtmlElement" );
+
+				if target.class_list().contains( "logview" ) { return None; }
+
+				if element.class_list().contains( "entry" )
+				{
+					target = element;
+
+					break;
+				}
+
+				target = element
 			}
 		}
 
-		else
-		{
-			self.container.class_list().add_1( "collapsed" ).expect_throw( "add collapsed class" );
-
-			// set with of column to height of controls
-			//
-			let width = controls.get_bounding_client_rect().width();
-			self.container.style().set_property( "width", &format!( "{}", width ) ).expect_throw( "set width" );
-
-
-			if let Some( logview ) = self.logview()
-			{
-				logview.style().set_property( "display", "none" ).expect_throw( "set display none" );
-			}
-		}
-	}
-
-
-	#[async_fn] fn handle( &mut self, _msg: Collapse )
-	{
-		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
-	}
-}
-
-
-
-pub struct ChangeFilter;
-
-impl Message for ChangeFilter { type Return = (); }
-
-
-impl Handler<ChangeFilter> for Column
-{
-	#[async_fn_local] fn handle_local( &mut self, _msg: ChangeFilter )
-	{
-		let filter: HtmlInputElement = self.find( ".filter-input" ).unchecked_into();
-
-		let new = filter.value().to_lowercase();
-
-		// Don't do anything if the text hasn't changed. This can happen when the user
-		// types faster than we can process. Then several events will be fired before we
-		// read the input value. However, we will still get to process the other events.
-		//
-		if self.filter.txt != new
-		{
-			self.filter.txt = new;
-			self.control.send( self.filter.clone() ).await.expect_throw( "update filter" );
-		}
-	}
-
-
-	#[async_fn] fn handle( &mut self, _msg: ChangeFilter )
-	{
-		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
-	}
-}
-
-
-
-#[ derive( Debug, Default, Copy, Clone ) ]
-//
-pub struct ToggleTrace;
-
-impl Message for ToggleTrace { type Return = (); }
-
-
-impl Handler<ToggleTrace> for Column
-{
-	#[async_fn_local] fn handle_local( &mut self, _msg: ToggleTrace )
-	{
-		self.filter.trace = !self.filter.trace;
-
-		self.control.send( self.filter.clone() ).await.expect_throw( "update filter" );
-
-
-		let button = self.find( ".button-trace" );
-
-		if self.filter.trace
-		{
-			button.class_list().remove_1( "hide" ).expect_throw( "remove hide from button-trace" );
-		}
-
-		else
-		{
-			button.class_list().add_1( "hide" ).expect_throw( "add hide to button-trace" );
-		}
-	}
-
-
-	#[async_fn] fn handle( &mut self, _msg: ToggleTrace )
-	{
-		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
-	}
-}
-
-
-
-#[ derive( Debug, Default, Copy, Clone ) ]
-//
-pub struct ToggleDebug;
-
-impl Message for ToggleDebug { type Return = (); }
-
-
-impl Handler<ToggleDebug> for Column
-{
-	#[async_fn_local] fn handle_local( &mut self, _msg: ToggleDebug )
-	{
-		self.filter.debug = !self.filter.debug;
-
-		self.control.send( self.filter.clone() ).await.expect_throw( "update filter" );
-
-
-		let button = self.find( ".button-debug" );
-
-		if self.filter.debug
-		{
-			button.class_list().remove_1( "hide" ).expect_throw( "remove hide from button-debug" );
-		}
-
-		else
-		{
-			button.class_list().add_1( "hide" ).expect_throw( "add hide to button-debug" );
-		}
-	}
-
-
-	#[async_fn] fn handle( &mut self, _msg: ToggleDebug )
-	{
-		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
-	}
-}
-
-
-
-#[ derive( Debug, Default, Copy, Clone ) ]
-//
-pub struct ToggleInfo;
-
-impl Message for ToggleInfo { type Return = (); }
-
-
-impl Handler<ToggleInfo> for Column
-{
-	#[async_fn_local] fn handle_local( &mut self, _msg: ToggleInfo )
-	{
-		self.filter.info = !self.filter.info;
-
-		self.control.send( self.filter.clone() ).await.expect_throw( "update filter" );
-
-
-		let button = self.find( ".button-info" );
-
-		if self.filter.info
-		{
-			button.class_list().remove_1( "hide" ).expect_throw( "remove hide from button-info" );
-		}
-
-		else
-		{
-			button.class_list().add_1( "hide" ).expect_throw( "add hide to button-info" );
-		}
-	}
-
-
-	#[async_fn] fn handle( &mut self, _msg: ToggleInfo )
-	{
-		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
-	}
-}
-
-
-
-#[ derive( Debug, Default, Copy, Clone ) ]
-//
-pub struct ToggleWarn;
-
-impl Message for ToggleWarn { type Return = (); }
-
-
-impl Handler<ToggleWarn> for Column
-{
-	#[async_fn_local] fn handle_local( &mut self, _msg: ToggleWarn )
-	{
-		self.filter.warn = !self.filter.warn;
-
-		self.control.send( self.filter.clone() ).await.expect_throw( "update filter" );
-
-
-		let button = self.find( ".button-warn" );
-
-		if self.filter.warn
-		{
-			button.class_list().remove_1( "hide" ).expect_throw( "remove hide from button-warn" );
-		}
-
-		else
-		{
-			button.class_list().add_1( "hide" ).expect_throw( "add hide to button-warn" );
-		}
-	}
-
-
-	#[async_fn] fn handle( &mut self, _msg: ToggleWarn )
-	{
-		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
-	}
-}
-
-
-
-#[ derive( Debug, Default, Copy, Clone ) ]
-//
-pub struct ToggleError;
-
-impl Message for ToggleError { type Return = (); }
-
-
-impl Handler<ToggleError> for Column
-{
-	#[async_fn_local] fn handle_local( &mut self, _msg: ToggleError )
-	{
-		self.filter.error = !self.filter.error;
-
-		self.control.send( self.filter.clone() ).await.expect_throw( "update filter" );
-
-
-		let button = self.find( ".button-error" );
-
-		if self.filter.error
-		{
-			button.class_list().remove_1( "hide" ).expect_throw( "remove hide from button-error" );
-		}
-
-		else
-		{
-			button.class_list().add_1( "hide" ).expect_throw( "add hide to button-error" );
-		}
-	}
-
-
-	#[async_fn] fn handle( &mut self, _msg: ToggleError )
-	{
-		unreachable!( "This actor is !Send and cannot be spawned on a threadpool" );
+		Some(target)
 	}
 }
 

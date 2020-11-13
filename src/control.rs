@@ -3,12 +3,14 @@ use crate::{ *, import::*, column::Column };
 mod filter      ;
 mod init_column ;
 mod set_text    ;
+mod toggle_entry;
 
 pub use
 {
 	filter      :: *,
 	init_column :: *,
 	set_text    :: *,
+	toggle_entry:: *,
 };
 
 
@@ -53,6 +55,7 @@ pub struct Control
 {
 	logview: Option < HtmlElement         > ,
 	lines  : Option < Vec<Entry>          > ,
+	format : Option < TextFormat          > ,
 	show   : HashMap< usize, Vec<Show>    > ,
 	columns: HashMap< usize, Addr<Column> > ,
 	filters: HashMap< usize, Filter       > ,
@@ -67,6 +70,7 @@ impl Control
 		{
 			logview : None           ,
 			lines   : None           ,
+			format  : None           ,
 			show    : HashMap::new() ,
 			columns : HashMap::new() ,
 			filters : HashMap::new() ,
@@ -87,10 +91,10 @@ impl Control
 	//
 	pub fn filter
 	(
-		lines : &Option< Vec<Entry> >            ,
-		show  : &mut HashMap< usize, Vec<Show> > ,
-		filter: &mut Filter                      ,
-		all_have_filters: bool                   ,
+		mut lines       : &mut Option< Vec<Entry> >        ,
+		show            : &mut HashMap< usize, Vec<Show> > ,
+		filter          : &mut Filter                      ,
+		all_have_filters: bool                             ,
 	)
 
 		-> bool
@@ -99,7 +103,7 @@ impl Control
 
 		// Nothing to filter if no text has yet been set.
 		//
-		let text = match &lines
+		let text = match &mut lines
 		{
 			None    => return update_others ,
 			Some(v) => v                    ,
@@ -128,7 +132,7 @@ impl Control
 
 		// for each line
 		//
-		for (i, e) in text.iter().enumerate()
+		for (i, e) in text.iter_mut().enumerate()
 		{
 			// check whether we show or not according to filter
 			//
@@ -231,7 +235,7 @@ impl Control
 			{
 				// we ignore the return as we will update all columns anyway, since there is a new text.
 				//
-				let _ = Self::filter( &self.lines, &mut self.show, &mut filter, all_have_filters );
+				let _ = Self::filter( &mut self.lines, &mut self.show, &mut filter, all_have_filters );
 			}
 		}
 
@@ -254,7 +258,13 @@ impl Control
 
 			// Send the new text to each column with the last filter we have.
 			//
-			col.send( Update { block, filter	} ).await.expect_throw( "send textblock to column" );
+			col.send( Update
+			{
+				block,
+				filter,
+				format: self.format.expect_throw( "have a text format set" ),
+
+			}).await.expect_throw( "send textblock to column" );
 		}
 	}
 }

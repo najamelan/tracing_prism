@@ -25,6 +25,10 @@ dependencies:
   gloo-events         : ^0.1
   async_nursery       : ^0.2
   tracing             : { version: ^0.1, features: [] }
+  serde_json          : ^1
+  regex               : { version: ^1, features: [ "std", "unicode-perl", "unicode-case", "perf" ], default-features: false }
+  send_wrapper        : ^0.5
+
 
   web-sys:
 
@@ -32,20 +36,21 @@ dependencies:
 
     features :
     [
-      Blob,
-      console     ,
-      CssStyleDeclaration,
-      Document    ,
-      DomRect    ,
-      DomTokenList,
-      Element     ,
-      File,
-      FileList,
-      HtmlCollection ,
-      HtmlElement ,
-      HtmlInputElement,
-      Node        ,
-      Window      ,
+      Blob                ,
+      console             ,
+      CssStyleDeclaration ,
+      Document            ,
+      DomRect             ,
+      DomTokenList        ,
+      Element             ,
+      File                ,
+      FileList            ,
+      HtmlCollection      ,
+      HtmlElement         ,
+      HtmlInputElement    ,
+      Node                ,
+      Selection           ,
+      Window              ,
     ]
 
 

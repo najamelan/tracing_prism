@@ -1,7 +1,18 @@
+@media (hover: none)
+{
+	/* custom css for devices where the primary input mechanism cannot hover
+	at all or cannot conveniently hover */
+
+	#timestamp
+	{
+		display: none;
+	}
+}
+
+
 body
 {
 	display: grid;
-	height: 100%;
 	grid-template-rows: auto minmax(0, 1fr);
 	margin: 0;
 	font-family: Montserrat, verdana;
@@ -33,6 +44,19 @@ body
 }
 
 
+#info
+{
+	float: right;
+	margin-top: .3rem;
+}
+
+
+#info img
+{
+	height: 1.5rem;
+}
+
+
 #controls *
 {
 	display: inline-block;
@@ -42,27 +66,57 @@ body
 
 .column
 {
-	padding: .5vw;
+	padding: .2rem 0;
 	min-width: 18rem;
 }
 
 
 .logview
 {
-	padding-top: 2vh;
+	padding-top: 3px;
+	font-size: .8rem;
 }
 
 
-.logview p
+.logview table
 {
-	margin: 0;
-	padding: .2rem 0;
+	font-size: .8rem;
+}
+
+
+.entry
+{
+	margin     : 0;
+	padding    : .3rem 0 .3rem 1%;
 	font-family: "Source Code Pro", Consolas, monospace;
+	width      : 99%;
+	border-radius: 3px;
+}
+
+
+.entry p
+{
+	margin     : 0;
+	padding    : 0;
+
+}
+
+.entry table
+{
+	width: 98%;
+	padding: .2rem;
+	border-top: 1px dashed gray;
+	border-bottom: 1px dashed gray;
+	margin-top: .4rem;
+	border-radius: .8rem;
 }
 
 
 #columns
 {
+	/* Needed for #timestamp which has position: absolute.
+	*/
+	position: relative;
 	display: grid;
 	grid-auto-flow: column;
 	grid-gap: 0.3vw;
@@ -116,6 +170,53 @@ body
 .toggle-button.hide
 {
 	font-weight: normal;
+}
+
+
+.entry.hidden *
+{
+	visibility: hidden;
+}
+
+.display_none
+{
+	display: none;
+}
+
+
+.target
+{
+	font-style: italic;
+}
+
+/* The table of fields */
+
+.field-keys
+{
+	width: 5%;
+	white-space: nowrap;
+}
+
+.field-separators
+{
+	width: 1%;
+	white-space: nowrap;
+}
+
+.field-key, .field-separator
+{
+	vertical-align: top;
+}
+
+#timestamp
+{
+	font-size    : 0.8rem;
+	position     : fixed;
+	bottom       : 0;
+	padding      : 0.4rem;
+	border       : solid 1px;
+	border-radius: 5px;
+	width        :max-content;
 }
 
 

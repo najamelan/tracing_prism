@@ -1,11 +1,13 @@
-#![ allow( unused_imports ) ]
-
+#![ allow(clippy::suspicious_else_formatting) ]
 
 mod column;
 mod columns;
 mod control;
 mod e_handler;
 mod entry;
+mod json_entry;
+mod plain_entry;
+mod util;
 
 mod import
 {
@@ -24,16 +26,22 @@ mod import
 		futures         :: { task::LocalSpawnExt } ,
 		std             :: { task::*, pin::Pin, panic, collections::HashMap, sync::Arc, convert::TryInto  } ,
 		wasm_bindgen_futures :: { spawn_local, JsFuture                      } ,
+		regex           :: { Regex                          } ,
+		send_wrapper    :: { SendWrapper                    } ,
 	};
 }
 
+
 use
 {
-	column    :: { * } ,
-	columns   :: { * } ,
-	control   :: { * } ,
-	e_handler :: { * } ,
-	entry     :: { * } ,
+	column     :: { * } ,
+	columns    :: { * } ,
+	control    :: { * } ,
+	e_handler  :: { * } ,
+	entry      :: { * } ,
+	json_entry :: { * } ,
+	plain_entry:: { * } ,
+	util       :: { * } ,
 };
 
 
@@ -48,11 +56,6 @@ pub async fn main()
 {
 	wasm_logger::init( wasm_logger::Config::new( log::Level::Trace ) );
 
-
-	let window   = web_sys::window  ().expect_throw( "no global `window` exists"        );
-	let document = window  .document().expect_throw( "should have a document on window" );
-
-
 	let upload = get_id( "upload" );
 
 	let file_evts = EHandler::new( &upload, "change", true );
@@ -61,8 +64,7 @@ pub async fn main()
 	let add_evts = EHandler::new( &add_col, "click", true );
 
 
-	let column_cont = document.get_element_by_id( "columns" ).expect_throw( "doc should have columns element" ).unchecked_into();
-
+	let column_cont  = get_id( "columns" );
 	let addr_control = Addr::builder().start_local( Control::new(), &Bindgen ).expect_throw( "spawn control" );
 
 	let (addr_columns, mb_columns) = Addr::builder().build();
@@ -78,25 +80,6 @@ pub async fn main()
 
 
 
-/// Get the document node
-//
-pub fn document() -> Document
-{
-	let window = web_sys::window().expect_throw( "no global `window` exists");
-
-	window.document().expect_throw( "should have a document on window" )
-}
-
-
-/// GetElementById
-//
-fn get_id( id: &str ) -> HtmlElement
-{
-	document().get_element_by_id( id ).expect_throw( &format!( "find {}", id ) ).unchecked_into()
-}
-
-
-
 async fn on_upload
 (
 	mut evts: impl Stream< Item=Event > + Unpin ,
@@ -105,7 +88,7 @@ async fn on_upload
 {
 	let upload: HtmlInputElement = get_id( "upload" ).unchecked_into();
 
-	while let Some(_) = evts.next().await
+	while evts.next().await.is_some()
 	{
 		let file_list = upload.files().expect_throw( "get filelist" );
 		let file      = file_list.get( 0 ).expect_throw( "get first file" );
