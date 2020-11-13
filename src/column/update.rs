@@ -3,8 +3,9 @@ use crate::{ *, import::* };
 
 pub struct Update
 {
-	pub block : Option< HtmlElement >,
-	pub filter: Option< Vec<Show>   >,
+	pub block : Option< HtmlElement > ,
+	pub filter: Option< Vec<Show>   > ,
+	pub format: TextFormat            ,
 }
 
 // TODO: use SendWrapper?
@@ -18,6 +19,10 @@ impl Handler<Update> for Column
 {
 	#[async_fn_local] fn handle_local( &mut self, msg: Update )
 	{
+		self.format = Some( msg.format );
+
+		// if we get a new text.
+		//
 		if let Some(block) = &msg.block
 		{
 			// if the element exists, remove it
@@ -75,22 +80,32 @@ impl Handler<Update> for Column
 			}
 
 
-			let logview_evts = EHandler::new( &block, "click", true );
-			let task         = Column::on_click_entry( logview_evts, self.addr.clone().expect_throw( "have addr" ) );
+			// This sets the handlers for expanding the log entry on click to show all the fields as well
+			// as displaying the timestamp in the lower left corner on mouseover.
+			//
+			// Both of these don't make sense for plain text logs.
+			//
+			if let TextFormat::Json = msg.format
+			{
+				let logview_evts = EHandler::new( &block, "click", true );
+				let task         = Column::on_click_entry( logview_evts, self.addr.clone().expect_throw( "have addr" ) );
 
-			self.nursery.spawn_local( task ).expect_throw( "click evts on logview" );
+				self.nursery.spawn_local( task ).expect_throw( "click evts on logview" );
 
 
-			let logview_evts = EHandler::new( &block, "mouseover", true );
-			let task         = Column::on_mouse_over_entry( logview_evts, self.addr.clone().expect_throw( "have addr" ) );
+				let logview_evts = EHandler::new( &block, "mouseover", true );
+				let task         = Column::on_mouse_over_entry( logview_evts, self.addr.clone().expect_throw( "have addr" ) );
 
-			self.nursery.spawn_local( task ).expect_throw( "click evts on logview" );
-
+				self.nursery.spawn_local( task ).expect_throw( "click evts on logview" );
+			}
 
 			self.container.append_child( &block ).expect_throw( "append div" );
 		}
 
 
+
+		// if we get new visibility information for lines.
+		//
 		else if let Some(f) = msg.filter
 		{
 			if let Some(logview) = self.logview()

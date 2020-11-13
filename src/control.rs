@@ -54,7 +54,8 @@ pub enum Show
 pub struct Control
 {
 	logview: Option < HtmlElement         > ,
-	lines  : Option < Vec<JsonEntry>      > ,
+	lines  : Option < Vec<Entry>          > ,
+	format : Option < TextFormat          > ,
 	show   : HashMap< usize, Vec<Show>    > ,
 	columns: HashMap< usize, Addr<Column> > ,
 	filters: HashMap< usize, Filter       > ,
@@ -69,6 +70,7 @@ impl Control
 		{
 			logview : None           ,
 			lines   : None           ,
+			format  : None           ,
 			show    : HashMap::new() ,
 			columns : HashMap::new() ,
 			filters : HashMap::new() ,
@@ -89,10 +91,10 @@ impl Control
 	//
 	pub fn filter
 	(
-		mut lines : &mut Option< Vec<JsonEntry> >    ,
-		show  : &mut HashMap< usize, Vec<Show> > ,
-		filter: &mut Filter                      ,
-		all_have_filters: bool                   ,
+		mut lines       : &mut Option< Vec<Entry> >        ,
+		show            : &mut HashMap< usize, Vec<Show> > ,
+		filter          : &mut Filter                      ,
+		all_have_filters: bool                             ,
 	)
 
 		-> bool
@@ -256,7 +258,13 @@ impl Control
 
 			// Send the new text to each column with the last filter we have.
 			//
-			col.send( Update { block, filter	} ).await.expect_throw( "send textblock to column" );
+			col.send( Update
+			{
+				block,
+				filter,
+				format: self.format.expect_throw( "have a text format set" ),
+
+			}).await.expect_throw( "send textblock to column" );
 		}
 	}
 }

@@ -52,7 +52,9 @@ impl Handler<Filter> for Control
 			col.send( Update
 			{
 				block : None,
-				filter: self.show.get( &msg.id ).map( Clone::clone )
+				filter: self.show.get( &msg.id ).map( Clone::clone ),
+				format: self.format.expect_throw( "have a text format set" ),
+
 
 			}).await.expect_throw( "send" );
 		}
@@ -66,8 +68,9 @@ impl Handler<Filter> for Control
 			{
 				col.send( Update
 				{
-					block: None,
+					block : None,
 					filter: self.show.get( &col.id() ).map( Clone::clone ),
+					format: self.format.expect_throw( "have a text format set" ),
 
 				}).await.expect_throw( "send textblock to column" );
 			}

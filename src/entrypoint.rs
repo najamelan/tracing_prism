@@ -4,8 +4,9 @@ mod column;
 mod columns;
 mod control;
 mod e_handler;
-// mod entry;
+mod entry;
 mod json_entry;
+mod plain_entry;
 mod util;
 
 mod import
@@ -33,13 +34,14 @@ mod import
 
 use
 {
-	column    :: { * } ,
-	columns   :: { * } ,
-	control   :: { * } ,
-	e_handler :: { * } ,
-// 	entry     :: { * } ,
-	json_entry:: { * } ,
-	util      :: { * } ,
+	column     :: { * } ,
+	columns    :: { * } ,
+	control    :: { * } ,
+	e_handler  :: { * } ,
+	entry      :: { * } ,
+	json_entry :: { * } ,
+	plain_entry:: { * } ,
+	util       :: { * } ,
 };
 
 

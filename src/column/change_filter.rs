@@ -19,7 +19,7 @@ impl Handler<ChangeFilter> for Column
 		// types faster than we can process. Then several events will be fired before we
 		// read the input value. However, we will still get to process the other events.
 		//
-		if &self.filter_txt != &new
+		if self.filter_txt != new
 		{
 			self.filter.regex = Some( Regex::new( &format!( "(?i){}", &new ) ).expect_throw( "valid regex" ) );
 			self.filter_txt   = new;

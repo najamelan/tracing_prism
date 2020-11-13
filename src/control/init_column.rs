@@ -14,6 +14,8 @@ impl Handler<InitColumn> for Control
 		let mut addr = msg.0;
 
 
+		// if there is already a log file loaded.
+		//
 		if let Some(block) = &self.logview
 		{
 			// Since we are adding a new column which will be showing all text,
@@ -40,6 +42,7 @@ impl Handler<InitColumn> for Control
 						{
 							block : None,
 							filter: Some( show.clone() ),
+							format: self.format.expect_throw( "have a text format set" ),
 
 						}).await.expect_throw( "send textblock to column" );
 					}
@@ -50,6 +53,8 @@ impl Handler<InitColumn> for Control
 			{
 				block : Some( block.clone_node_with_deep( true ).expect_throw( "clone text" ).unchecked_into() ),
 				filter: None, // as the column is brand new, no filters yet.
+				format: self.format.expect_throw( "have a text format set" ),
+
 
 			}).await.expect_throw( "send textblock to column" );
 		}

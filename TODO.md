@@ -2,6 +2,7 @@
 
 - re-enable plain text
 - cargo integration
+- accessibility check
 - performance
 - document
 - blog post

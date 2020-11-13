@@ -173,7 +173,7 @@ body
 }
 
 
-.entry.hidden > *
+.entry.hidden *
 {
 	visibility: hidden;
 }
