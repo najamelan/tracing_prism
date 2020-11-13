@@ -18,6 +18,7 @@
 	--button-border : #626A73;
 	--foreground    : #FFF   ;
 	--input         : black  ;
+	--wrong-regex   : #530404;
 }
 
 
@@ -41,13 +42,14 @@
 		--button-border : #2E3436;
 		--foreground    : #000   ;
 		--input         : #FFFFFF;
+		--wrong-regex   : #F24343;
 	}
 }
 
 
 body, html
 {
-	background: var( --bg-darker );
+	background: var( --bg-darker  );
 	color     : var( --foreground );
 }
 
@@ -83,6 +85,12 @@ button
 	color: var( --foreground );
 	border-color: var( --button-border );
 	margin-right: 1px;
+}
+
+
+.wrong-regex
+{
+	background: var( --wrong-regex );
 }
 
 

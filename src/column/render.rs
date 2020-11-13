@@ -55,6 +55,17 @@ impl Handler<Render> for Column
 
 		self.nursery.spawn_local( task ).expect_throw( "Handler<Render> for Column - spawn close" );
 
+
+		// Apparently click is a better event for this than onchange. In any case, we want to
+		// react as fast as possible and not wait for the element to lose focus.
+		//
+		let use_regex  = get_id( "use-regex" );
+		let regex_evts = EHandler::new( &use_regex, "click", true );
+		let task       = Column::on_use_regex( regex_evts, addr.clone() );
+
+		self.nursery.spawn_local( task ).expect_throw( "Handler<Render> for Column - spawn close" );
+
+
 		self.toggle_button::<Collapse>( ".button-collapse" );
 
 		self.toggle_button::<ToggleTrace>( ".button-trace" );

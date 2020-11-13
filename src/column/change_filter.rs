@@ -11,22 +11,53 @@ impl Handler<ChangeFilter> for Column
 	#[async_fn_local] fn handle_local( &mut self, _msg: ChangeFilter )
 	{
 
-		let filter: HtmlInputElement = self.find( ".filter-input" ).unchecked_into();
+		let filter   : HtmlInputElement = self.find( ".filter-input" ).unchecked_into();
+		let use_regex: HtmlInputElement = get_id( "use-regex" ).unchecked_into();
 
 		let new = filter.value();
 
-		// Don't do anything if the text hasn't changed. This can happen when the user
+
+		let regex = if use_regex.checked()
+		{
+			Regex::new( &format!( "(?i){}", &new ) )
+		}
+
+		else
+		{
+			Regex::new( &format!( "(?i){}", regex::escape(&new) ) )
+		};
+
+
+		let regex = match regex
+		{
+			Ok(re) =>
+			{
+				filter.class_list().remove_1( "wrong-regex" ).expect_throw( "remove wrong-regex class" );
+
+				Some(re)
+			}
+
+			Err(_) =>
+			{
+				filter.class_list().add_1( "wrong-regex" ).expect_throw( "add wrong-regex class" );
+
+				return;
+			}
+		};
+
+
+		// Don't do anything if the regex hasn't changed. This can happen when the user
 		// types faster than we can process. Then several events will be fired before we
 		// read the input value. However, we will still get to process the other events.
 		//
-		if self.filter_txt != new
+		if self.filter.regex.as_ref().map(Regex::as_str) != regex.as_ref().map(Regex::as_str)
 		{
-			self.filter.regex = Some( Regex::new( &format!( "(?i){}", &new ) ).expect_throw( "valid regex" ) );
 			self.filter_txt   = new;
+			self.filter.regex = regex;
 
 			// This provides the back pressure.
 			//
-			self.control.send( self.filter.clone() ).await.expect_throw( "update filter" );
+			self.control.call( self.filter.clone() ).await.expect_throw( "update filter" );
 		}
 	}
 

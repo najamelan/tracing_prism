@@ -1,6 +1,7 @@
 # TODO
 
-- re-enable plain text
+- make case insensitive configurable.
+- make sure we don't run the regex on each line if the filter is the empty string.
 - cargo integration
 - accessibility check
 - performance
