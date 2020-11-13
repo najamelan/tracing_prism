@@ -1,5 +1,4 @@
-#![ allow( unused_imports ) ]
-
+#![ allow(clippy::suspicious_else_formatting) ]
 
 mod column;
 mod columns;
@@ -87,7 +86,7 @@ async fn on_upload
 {
 	let upload: HtmlInputElement = get_id( "upload" ).unchecked_into();
 
-	while let Some(_) = evts.next().await
+	while evts.next().await.is_some()
 	{
 		let file_list = upload.files().expect_throw( "get filelist" );
 		let file      = file_list.get( 0 ).expect_throw( "get first file" );

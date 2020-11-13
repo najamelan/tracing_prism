@@ -125,7 +125,7 @@ impl JsonEntry
 
 	pub fn lvl( &self ) -> LogLevel
 	{
-		self.lvl.clone()
+		self.lvl
 	}
 
 
@@ -139,7 +139,7 @@ impl JsonEntry
 			out.push( key.as_str().trim() );
 		}
 
-		out.sort();
+		out.sort_unstable();
 		out.dedup();
 		out
 	}
@@ -271,9 +271,9 @@ impl JsonEntry
 				// spaces after the colon are non-breaking spaces.
 				//
 				Value::Null       => "null".to_string()                                        ,
-				Value::String (s) => format!( "{}"  , s )                                      ,
-				Value::Number (n) => format!( "{}"  , n )                                      ,
-				Value::Bool   (b) => format!( "{}"  , b )                                      ,
+				Value::String (s) => s.to_string()                                             ,
+				Value::Number (n) => n.to_string()                                             ,
+				Value::Bool   (b) => b.to_string()                                             ,
 				Value::Array  (a) => serde_json::to_string(a).expect_throw( "stringify json" ) ,
 				Value::Object (o) => serde_json::to_string(o).expect_throw( "stringify json" ) ,
 			};

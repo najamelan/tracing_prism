@@ -80,7 +80,7 @@ impl Column
 
 	/// Set's the classes to hide and display none on lines.
 	//
-	fn filter( &self, logview: &HtmlElement, filter: &Vec<Show> )
+	fn filter( &self, logview: &HtmlElement, filter: &[Show] )
 	{
 		let children = logview.children();
 		let mut odd  = true;
