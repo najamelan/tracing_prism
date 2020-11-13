@@ -2,17 +2,22 @@
 
 :root
 {
-	--background: #0f1319;
-	--bg-darker : #090c12;
-	--warn      : #ff8f2d;
-	--debug     : #39bae6;
-	--trace     : #B3B1AD;
-	--info      : #C2D94C;
-	--error     : #EF2929;
-	--entity    : #59C2FF;
-	--comment   : #626A73;
-	--foreground: #fff   ;
-	--input     : black  ;
+	--background    : #151C25;
+	--bg-darker     : #090C12;
+	--debug         : #39bae6;
+	--debug-bright  : #45C6F2;
+	--trace         : #B1A9AB;
+	--trace-bright  : #BDB5B8;
+	--info          : #C2D94C;
+	--info-bright   : #CCE356;
+	--warn          : #FF8F2D;
+	--warn-bright   : #FFA139;
+	--error         : #EF2929;
+	--error-bright  : #F73131;
+	--entity        : #59C2FF;
+	--button-border : #626A73;
+	--foreground    : #FFF   ;
+	--input         : black  ;
 }
 
 
@@ -20,15 +25,30 @@
 {
 	:root
 	{
-		--bg-color: black;
+		--background    : #EEE;
+		--bg-darker     : #FFF;
+		--trace         : #2E3436;
+		--trace-bright  : #23282A;
+		--debug         : #204A87;
+		--debug-bright  : #143F7A;
+		--info          : #697D00;
+		--info-bright   : #5D7200;
+		--warn          : #CE5C00;
+		--warn-bright   : #C35100;
+		--error         : #A40000;
+		--error         : #980000;
+		--entity        : #59C2FF;
+		--button-border : #2E3436;
+		--foreground    : #000   ;
+		--input         : #FFFFFF;
 	}
 }
 
 
 body, html
 {
-	background: var( --background ) !important;
-	color     : var( --foreground ) !important;
+	background: var( --bg-darker );
+	color     : var( --foreground );
 }
 
 
@@ -48,16 +68,12 @@ body, html
 	background: var( --bg-darker );
 }
 
-.logview > p:nth-child(even)
-{
-	background: var( --background );
-}
 
 button
 {
 	background: var( --background );
 	color: var( --foreground );
-	border-color: var( --comment );
+	border-color: var( --button-border );
 	margin-right: 1px;
 }
 
@@ -65,7 +81,7 @@ button
 {
 	background: var( --input );
 	color: var( --foreground );
-	border-color: var( --comment );
+	border-color: var( --button-border );
 	margin-right: 1px;
 }
 
@@ -106,5 +122,58 @@ button
 , .button-warn.hide
 , .button-error.hide
 {
-	color: var( --comment );
+	color: var( --button-border );
+}
+
+
+
+  .entry > p
+, .entry > table td
+{
+	color: inherit;
+}
+
+
+.trace .message
+{
+	color: var( --trace-bright );
+}
+
+.debug .message
+{
+	color: var( --debug-bright );
+}
+
+.info .message
+{
+	color: var( --info-bright );
+}
+
+.warn .message
+{
+	color: var( --warn-bright );
+}
+
+.error .message
+{
+	color: var( --error-bright );
+}
+
+
+/*
+ * Color every second row, ignoring hidden items:
+ * https://blog.blackbam.at/2015/04/09/css-nth-child-selector-ignore-hidden-element/
+ */
+
+
+.entry.odd
+{
+	background: var( --background );
+}
+
+
+#timestamp
+{
+	background: var( --bg-darker );
+	border-color: var( --warn );
 }
