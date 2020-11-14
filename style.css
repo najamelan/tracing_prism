@@ -63,6 +63,11 @@ body
 	margin-right: 1vw;
 }
 
+#controls input[type=checkbox]
+{
+	margin-right: 0;
+}
+
 
 .column
 {

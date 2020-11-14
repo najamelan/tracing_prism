@@ -63,7 +63,14 @@ impl Handler<Render> for Column
 		let regex_evts = EHandler::new( &use_regex, "click", true );
 		let task       = Column::on_use_regex( regex_evts, addr.clone() );
 
-		self.nursery.spawn_local( task ).expect_throw( "Handler<Render> for Column - spawn close" );
+		self.nursery.spawn_local( task ).expect_throw( "Handler<Render> for Column - spawn regex" );
+
+
+		let case      = get_id( "case" );
+		let case_evts = EHandler::new( &case, "click", true );
+		let task      = Column::on_case_sensitive( case_evts, addr.clone() );
+
+		self.nursery.spawn_local( task ).expect_throw( "Handler<Render> for Column - spawn case" );
 
 
 		self.toggle_button::<Collapse>( ".button-collapse" );

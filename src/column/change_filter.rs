@@ -11,20 +11,22 @@ impl Handler<ChangeFilter> for Column
 	#[async_fn_local] fn handle_local( &mut self, _msg: ChangeFilter )
 	{
 
-		let filter   : HtmlInputElement = self.find( ".filter-input" ).unchecked_into();
-		let use_regex: HtmlInputElement = get_id( "use-regex" ).unchecked_into();
+		let filter     : HtmlInputElement = self.find( ".filter-input" ).unchecked_into();
+		let use_regex  : HtmlInputElement = get_id( "use-regex"        ).unchecked_into();
+		let case       : HtmlInputElement = get_id( "case"             ).unchecked_into();
 
-		let new = filter.value();
 
-
-		let regex = if use_regex.checked()
+		let new = match use_regex.checked()
 		{
-			Regex::new( &format!( "(?i){}", &new ) )
-		}
+			true  => filter.value()                 ,
+			false => regex::escape(&filter.value()) ,
+		};
 
-		else
+
+		let regex = match case.checked()
 		{
-			Regex::new( &format!( "(?i){}", regex::escape(&new) ) )
+			true  => Regex::new( &new                     ) ,
+			false => Regex::new( &format!("(?i){}", &new) ) ,
 		};
 
 

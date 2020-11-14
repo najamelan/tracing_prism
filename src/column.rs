@@ -171,6 +171,16 @@ impl Column
 	}
 
 
+	async fn on_case_sensitive
+	(
+		evts  : impl Stream< Item=Event > + Unpin ,
+		column: Addr<Column>,
+	)
+	{
+		evts.map( |_| Ok( ChangeFilter ) ).forward( column ).await.expect_throw( "send ChangeFilter" );
+	}
+
+
 	// TODO: can we leak memory? Eg. does the event listener get dropped when the element gets
 	// removed from the dom?
 	//
