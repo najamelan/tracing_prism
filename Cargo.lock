@@ -441,7 +441,7 @@ dependencies = [
 
 [[package]]
 name = "thespis_impl"
-version = "0.1.0-alpha.1"
+version = "0.1.0-alpha.2"
 dependencies = [
  "async_executors 0.4.0-beta.2",
  "futures 0.3.7",
