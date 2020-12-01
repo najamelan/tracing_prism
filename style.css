@@ -71,6 +71,7 @@ body
 
 .column
 {
+	display: block;
 	padding: .2rem 0;
 	min-width: 18rem;
 }
@@ -164,6 +165,12 @@ body
 	width: 100%;
 	max-height: 50vh;
 	min-width: auto;
+}
+
+
+.collapsed .logview
+{
+	display: none;
 }
 
 

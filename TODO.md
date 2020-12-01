@@ -1,6 +1,6 @@
 # TODO
 
-- make case insensitive configurable.
+- use ijson
 - make sure we don't run the regex on each line if the filter is the empty string.
 - cargo integration
 - accessibility check
@@ -21,6 +21,4 @@
   - currently we are naively recalculating everything and re-manipulating everything if anything might have changed.
     eg. when removing a column, all other columns will run all filters again and manipulate the dom again even if
     nothing has to change in their view. Surely this isn't the most performant approach.
-
-
 
