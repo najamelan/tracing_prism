@@ -231,7 +231,7 @@ impl Column
 			evts.forward( addr ).await.expect_throw( &format!( "send {:?}", M::default() ) );
 		};
 
-		self.nursery.spawn_local( task ).expect_throw( "Column::toggle_button - spawn" );
+		self.nursery.nurse_local( task ).expect_throw( "Column::toggle_button - spawn" );
 	}
 
 

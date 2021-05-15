@@ -67,6 +67,8 @@ pub async fn main()
 	let column_cont  = get_id( "columns" );
 	let addr_control = Addr::builder().start_local( Control::new(), &Bindgen ).expect_throw( "spawn control" );
 
+	Err( "test panicking in wasm" ).expect_throw( "BOOM" );
+
 	let (addr_columns, mb_columns) = Addr::builder().build();
 	let mut columns = Columns::new( column_cont, 3, addr_columns.clone(), addr_control.clone() );
 	columns.render().await;

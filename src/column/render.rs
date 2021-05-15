@@ -46,14 +46,14 @@ impl Handler<Render> for Column
 		let filter_evts = EHandler::new( &filter, "input", true );
 		let task        = Column::on_filter( filter_evts, addr.clone() );
 
-		self.nursery.spawn_local( task ).expect_throw( "Handler<Render> for Column - spawn filter" );
+		self.nursery.nurse_local( task ).expect_throw( "Handler<Render> for Column - spawn filter" );
 
 
 		let del_col  = self.find( ".button-close" );
 		let del_evts = EHandler::new( &del_col, "click", true );
 		let task     = Column::on_delcol( del_evts, addr.clone() );
 
-		self.nursery.spawn_local( task ).expect_throw( "Handler<Render> for Column - spawn close" );
+		self.nursery.nurse_local( task ).expect_throw( "Handler<Render> for Column - spawn close" );
 
 
 		// Apparently click is a better event for this than onchange. In any case, we want to
@@ -63,14 +63,14 @@ impl Handler<Render> for Column
 		let regex_evts = EHandler::new( &use_regex, "click", true );
 		let task       = Column::on_use_regex( regex_evts, addr.clone() );
 
-		self.nursery.spawn_local( task ).expect_throw( "Handler<Render> for Column - spawn regex" );
+		self.nursery.nurse_local( task ).expect_throw( "Handler<Render> for Column - spawn regex" );
 
 
 		let case      = get_id( "case" );
 		let case_evts = EHandler::new( &case, "click", true );
 		let task      = Column::on_case_sensitive( case_evts, addr.clone() );
 
-		self.nursery.spawn_local( task ).expect_throw( "Handler<Render> for Column - spawn case" );
+		self.nursery.nurse_local( task ).expect_throw( "Handler<Render> for Column - spawn case" );
 
 
 		self.toggle_button::<Collapse>( ".button-collapse" );
