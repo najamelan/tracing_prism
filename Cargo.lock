@@ -57,6 +57,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
 
 [[package]]
+name = "console_error_panic_hook"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b8d976903543e0c48546a91908f21588a680a8c8f984df9a5d69feccb2b2a211"
+dependencies = [
+ "cfg-if",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "futures"
 version = "0.1.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -442,6 +452,8 @@ dependencies = [
 [[package]]
 name = "thespis_impl"
 version = "0.1.0-alpha.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00b1a32055f41714fa7e20ee340acbda3ac2f5f87774ad5b3604452851ebea71"
 dependencies = [
  "async_executors 0.4.0-beta.2",
  "futures 0.3.7",
@@ -532,6 +544,7 @@ version = "0.1.0"
 dependencies = [
  "async_executors 0.3.0",
  "async_nursery",
+ "console_error_panic_hook",
  "futures 0.3.7",
  "gloo-events",
  "log",

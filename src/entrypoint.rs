@@ -13,21 +13,21 @@ mod import
 {
 	pub use
 	{
-		log             :: { *                              } ,
-		web_sys         :: { *, console::log_1 as dbg       } ,
-		wasm_bindgen    :: { JsCast, UnwrapThrowExt         } ,
-		thespis         :: { *                              } ,
-		thespis_impl    :: { *                              } ,
-		async_executors :: { *                              } ,
-		async_nursery   :: { *                              } ,
-		std             :: { marker::PhantomData, rc::Rc    } ,
-		gloo_events     :: { *                              } ,
-		futures         :: { Stream, StreamExt, channel::{ mpsc::{ unbounded, UnboundedReceiver, UnboundedSender } } } ,
-		futures         :: { task::LocalSpawnExt } ,
-		std             :: { task::*, pin::Pin, panic, collections::HashMap, sync::Arc, convert::TryInto  } ,
-		wasm_bindgen_futures :: { spawn_local, JsFuture                      } ,
-		regex           :: { Regex                          } ,
-		send_wrapper    :: { SendWrapper                    } ,
+		log                  :: { *                                                                                       } ,
+		web_sys              :: { *, console::log_1 as dbg                                                                } ,
+		wasm_bindgen         :: { JsCast, UnwrapThrowExt                                                                  } ,
+		thespis              :: { *                                                                                       } ,
+		thespis_impl         :: { *                                                                                       } ,
+		async_executors      :: { *                                                                                       } ,
+		async_nursery        :: { *                                                                                       } ,
+		std                  :: { marker::PhantomData, rc::Rc                                                             } ,
+		gloo_events          :: { *                                                                                       } ,
+		futures              :: { Stream, StreamExt, channel::{ mpsc::{ unbounded, UnboundedReceiver, UnboundedSender } } } ,
+		futures              :: { task::LocalSpawnExt                                                                     } ,
+		std                  :: { task::*, pin::Pin, panic, collections::HashMap, sync::Arc, convert::TryInto             } ,
+		wasm_bindgen_futures :: { spawn_local, JsFuture                                                                   } ,
+		regex                :: { Regex                                                                                   } ,
+		send_wrapper         :: { SendWrapper                                                                             } ,
 	};
 }
 
@@ -54,6 +54,7 @@ use wasm_bindgen::prelude::*;
 //
 pub async fn main()
 {
+	console_error_panic_hook::set_once();
 	wasm_logger::init( wasm_logger::Config::new( log::Level::Trace ) );
 
 	let upload = get_id( "upload" );
@@ -66,8 +67,6 @@ pub async fn main()
 
 	let column_cont  = get_id( "columns" );
 	let addr_control = Addr::builder().start_local( Control::new(), &Bindgen ).expect_throw( "spawn control" );
-
-	Err( "test panicking in wasm" ).expect_throw( "BOOM" );
 
 	let (addr_columns, mb_columns) = Addr::builder().build();
 	let mut columns = Columns::new( column_cont, 3, addr_columns.clone(), addr_control.clone() );
