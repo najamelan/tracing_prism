@@ -1,6 +1,6 @@
 # Auto-generated from "Cargo.yml"
 [dependencies]
-async_nursery = "^0.2"
+async_nursery = "^0.3"
 console_error_panic_hook = "^0.1"
 futures = "^0.3"
 gloo-events = "^0.1"
@@ -13,7 +13,7 @@ wasm-logger = "^0.2"
 
 [dependencies.async_executors]
 features = ["bindgen"]
-version = "^0.3"
+version = "^0.4"
 
 [dependencies.regex]
 default-features = false
