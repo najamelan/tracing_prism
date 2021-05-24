@@ -51,14 +51,14 @@ impl Column
 
 		Self
 		{
-			addr: Some(addr)          ,
-			parent                    ,
-			container                 ,
-			columns                   ,
-			control                   ,
-			filter                    ,
-			nursery                   ,
-			nursery_output            ,
+			addr: Some(addr) ,
+			parent           ,
+			container        ,
+			columns          ,
+			control          ,
+			filter           ,
+			nursery          ,
+			nursery_output   ,
 		}
 	}
 
@@ -70,8 +70,8 @@ impl Column
 		self.container
 
 			.query_selector( selector )
-			.expect_throw( &expect )
-			.expect_throw( &expect )
+			.expect_throw  ( &expect  )
+			.expect_throw  ( &expect  )
 			.unchecked_into()
 	}
 

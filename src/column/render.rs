@@ -30,7 +30,15 @@ impl Handler<Render> for Column
 			.unchecked_into()
 		;
 
-		searchbox.set_tab_index( addr.id() as i32 );
+		// This makes it so that tabbing through elements first goes through the filter text input
+		// of each column before going to all the buttons for the log levels.
+		// We need each column to have an increasing number. Using the addr.id() here is not very
+		// robust but it is convenient. We add an arbitrary number so we don't interfere with the
+		// form elements in the header. Other elements on the page will not have any tab-index set
+		// so they will come after these.
+		//
+		let t_index = addr.id() +10;
+		searchbox.set_tab_index( t_index as i32 );
 
 		self.container.append_child( &controls       ).expect_throw( "append filter" );
 		self.parent   .append_child( &self.container ).expect_throw( "append column" );
