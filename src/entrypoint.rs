@@ -28,6 +28,7 @@ mod import
 		wasm_bindgen_futures :: { spawn_local, JsFuture                                                                   } ,
 		regex                :: { Regex                                                                                   } ,
 		send_wrapper         :: { SendWrapper                                                                             } ,
+		futures_timer        :: { Delay                                                                                   } ,
 	};
 }
 
@@ -57,12 +58,14 @@ pub async fn main()
 	console_error_panic_hook::set_once();
 	wasm_logger::init( wasm_logger::Config::new( log::Level::Trace ) );
 
-	let upload = get_id( "upload" );
-
+	let upload    = get_id( "upload" );
 	let file_evts = EHandler::new( &upload, "change", true );
 
 	let add_col  = get_id( "add-column" );
 	let add_evts = EHandler::new( &add_col, "click", true );
+
+	let body       = get_id( "paste-log" );
+	let paste_evts = EHandler::new( &body, "paste", true );
 
 
 	let column_cont  = get_id( "columns" );
@@ -74,8 +77,9 @@ pub async fn main()
 
 	spawn_local( async{ mb_columns.start_local( columns ).await; } );
 
-	spawn_local( on_upload( file_evts, addr_control ) );
-	spawn_local( on_addcol( add_evts , addr_columns ) );
+	spawn_local( on_upload( file_evts , addr_control.clone() ) );
+	spawn_local( on_addcol( add_evts  , addr_columns         ) );
+	spawn_local( on_paste ( paste_evts, addr_control         ) );
 }
 
 
@@ -113,4 +117,35 @@ async fn on_addcol
 		.forward( columns ).await
 		.expect_throw( "send addcol" )
 	;
+}
+
+
+
+async fn on_paste
+(
+	mut evts: impl Stream< Item=Event > + Unpin ,
+	control: Addr<Control>,
+)
+{
+	while let Some(_evt) = evts.next().await
+	{
+		// This lovely contraption is due to firefox not supporting the paste event...
+		// So we need a textarea to get pasted text.
+		//
+		let mut control2 = control.clone();
+
+		let delayed = async move
+		{
+			Delay::new( std::time::Duration::from_millis(1) ).await;
+
+			let input: HtmlTextAreaElement = get_id( "paste-log" ).unchecked_into();
+			let text = input.value();
+			input.set_value( "" );
+
+			control2.send( SetText{ text } ).await.expect_throw( "send settext" );
+		};
+
+		spawn_local( delayed );
+
+	};
 }

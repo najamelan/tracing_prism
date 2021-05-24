@@ -29,6 +29,7 @@ dependencies:
   regex                   : { version: ^1, features: [ "std", "unicode-perl", "unicode-case", "perf" ], default-features: false }
   send_wrapper            : ^0.5
   console_error_panic_hook: ^0.1
+  futures-timer           : { version: ^3, features: [wasm-bindgen] }
 
   web-sys:
 
@@ -48,6 +49,7 @@ dependencies:
       HtmlCollection      ,
       HtmlElement         ,
       HtmlInputElement    ,
+      HtmlTextAreaElement ,
       Node                ,
       Selection           ,
       Window              ,

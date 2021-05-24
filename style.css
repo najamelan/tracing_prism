@@ -69,6 +69,12 @@ body
 	margin-right: 0;
 }
 
+#paste-log
+{
+	height: 2em;
+	resize: none;
+}
+
 
 .column
 {
