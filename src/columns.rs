@@ -17,10 +17,10 @@ pub use
 //
 pub struct Columns
 {
-	children: HashMap<usize, Addr<Column>>,
-	container: HtmlElement,
-	addr_columns: Addr<Self>,
-	addr_control: Addr<Control>,
+	children    : HashMap<usize, Addr<Column>> ,
+	container   : HtmlElement                  ,
+	addr_columns: Addr<Self>                   ,
+	addr_control: Addr<Control>                ,
 }
 
 

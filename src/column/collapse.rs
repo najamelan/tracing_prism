@@ -12,6 +12,7 @@ impl Handler<Collapse> for Column
 {
 	#[async_fn_local] fn handle_local( &mut self, _msg: Collapse )
 	{
+		debug!( "in handle collapse" );
 		// turn controls sideways
 		//
 		let controls = self.find( ".col-controls" );
@@ -20,9 +21,6 @@ impl Handler<Collapse> for Column
 		if self.container.class_list().contains( "collapsed" )
 		{
 			self.container.class_list().remove_1( "collapsed" ).expect_throw( "remove collapsed class" );
-
-			// set with of column to height of controls
-			//
 			self.container.style().set_property( "width", "auto" ).expect_throw( "set width" );
 
 
@@ -34,13 +32,12 @@ impl Handler<Collapse> for Column
 
 		else
 		{
-			self.container.class_list().add_1( "collapsed" ).expect_throw( "add collapsed class" );
-
 			// set with of column to height of controls
 			//
-			let width = controls.get_bounding_client_rect().width();
-			self.container.style().set_property( "width", &format!( "{}", width ) ).expect_throw( "set width" );
+			let width = controls.get_bounding_client_rect().height();
 
+			self.container.class_list().add_1( "collapsed" ).expect_throw( "add collapsed class" );
+			self.container.style().set_property( "width", &format!( "{}", width ) ).expect_throw( "set width" );
 
 			if let Some( logview ) = self.logview()
 			{

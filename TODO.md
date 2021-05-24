@@ -1,6 +1,6 @@
 # TODO
 
-- column folding broken on chrome.
+- column folding broken on chrome, prob anything except firefox.
 - use ijson
 - make sure we don't run the regex on each line if the filter is the empty string.
 - cargo integration
