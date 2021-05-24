@@ -19,8 +19,6 @@ impl Handler<Update> for Column
 {
 	#[async_fn_local] fn handle_local( &mut self, msg: Update )
 	{
-		self.format = Some( msg.format );
-
 		// if we get a new text.
 		//
 		if let Some(block) = &msg.block

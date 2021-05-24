@@ -32,10 +32,8 @@ pub struct Column
 	addr           : Option< Addr<Self> >     ,
 	control        : Addr<Control>            ,
 	filter         : Filter                   ,
-	filter_txt     : String                   ,
 	nursery        : Nursery< Bindgen, () >   ,
 	nursery_output : Option< JoinHandle<()> > ,
-	format         : Option< TextFormat     > ,
 }
 
 
@@ -59,10 +57,8 @@ impl Column
 			columns                   ,
 			control                   ,
 			filter                    ,
-			filter_txt: String::new() ,
 			nursery                   ,
 			nursery_output            ,
-			format: None              ,
 		}
 	}
 

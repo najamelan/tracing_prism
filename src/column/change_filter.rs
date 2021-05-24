@@ -54,7 +54,6 @@ impl Handler<ChangeFilter> for Column
 		//
 		if self.filter.regex.as_ref().map(Regex::as_str) != regex.as_ref().map(Regex::as_str)
 		{
-			self.filter_txt   = new;
 			self.filter.regex = regex;
 
 			// This provides the back pressure.
