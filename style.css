@@ -129,11 +129,14 @@ body
 	font-weight: bold;
 }
 
-.entry .current-span
+
+/* Start the span on the next line. For the technique, see:
+   https://stackoverflow.com/a/26887399
+ */
+.entry .current-span:before
 {
-	border-left :  2px dashed gray;
-	margin-left :  .2rem;
-	padding-left:  .2rem;
+	content:  "\a ";
+	white-space: pre;
 }
 
 
