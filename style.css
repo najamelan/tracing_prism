@@ -124,6 +124,18 @@ body
 	width        : 98%;
 }
 
+.entry .message
+{
+	font-weight: bold;
+}
+
+.entry .current-span
+{
+	border-left :  2px dashed gray;
+	margin-left :  .2rem;
+	padding-left:  .2rem;
+}
+
 
 #columns
 {
