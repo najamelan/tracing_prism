@@ -97,22 +97,36 @@ impl JsonEntry
 
 		let msg = match map.remove( "message" )
 		{
-			Some(Value::String(s)) => format!( " ~ {}", s ),
+			Some( Value::String(s) ) => format!( " ~ {}", s ),
+
 			_ => panic!( "every log entry to have a message" ),
 		};
 
+
 		let target = match map.remove( "target" )
 		{
-			Some(Value::String(s)) => s,
+			Some( Value::String(s) ) => s,
+
 			_ => panic!( "every log entry to have a target" ),
 		};
 
-		let span = match map.remove( "span" )
+
+		let span = match map.remove( "spans" )
 		{
-			Some(Value::Object(o)) =>
+			Some(Value::Array(a)) =>
 			{
-				let mut s = String::new();
-				val_to_string( &Value::Object(o), &mut s ).expect( "boom" );
+				let mut s   = String::new();
+				let     len = a.len();
+
+				for i in 0..len
+				{
+					val_to_string( &a[i], &mut s ).expect( "boom" );
+
+					use std::fmt::Write;
+					if i < len-1 { write!( s, " ⊶ " ).unwrap(); }
+
+				}
+
 				s
 			},
 
@@ -296,7 +310,7 @@ impl JsonEntry
 				div.set_attribute( "data-time", &s ).expect_throw( "set data-time attribute" );
 			}
 
-			if key == "span"
+			if key == "span" || key == "spans"
 			{
 				continue;
 			}

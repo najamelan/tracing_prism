@@ -31,34 +31,72 @@ pub fn val_to_string( obj: &Value, s: &mut impl fmt::Write ) -> fmt::Result
 		}
 
 
+		// We know it has at least one key:value pair.
+		//
 		Value::Object(o) if o.len() > 0 =>
 		{
-			write!( s, "{{ " )?;
+			let mut name = false;
 
-			let mut iter = o.iter();
-			let     elem = iter.next().unwrap();
-
-
-			let key: &str = if elem.0.starts_with( "r#" ) { &elem.0[2..] }
-			                else { elem.0 }
-			;
-
-
-			write!( s, "{}=", key )?;
-
-			val_to_string( &elem.1, s )?;
-
-			for elem in iter
+			// This is like the name of the span. We will treat this special and print something like:
+			// span_name={ prop1=val1, ... }
+			//
+			if let Some(v) = o.get( "name" )
 			{
-				let key: &str = if elem.0.starts_with( "r#" ) { &elem.0[2..] }
-				                else { elem.0 }
-				;
+				name = true;
 
-				write!( s, ", {}=", key )?;
-				val_to_string( &elem.1, s )?;
+				val_to_string( &v, s )?;
 			}
 
-			write!( s, " }}" )?;
+
+			// We no longer want to deal with the name property, but since we are working
+			// from a read-only object, it's still in here.
+			//
+			// If there was a name, there must be at least one more property in order to
+			// keep processing.
+			//
+			if !name || o.len() > 1
+			{
+				if name { write!( s, "={{ " )?; }
+				else    { write!( s, "{{ "  )?; }
+
+
+				// Since we want to separate with comma's, unroll the first element so we
+				// don't precede it with a comma.
+				//
+				let mut iter = o.iter();
+				let     elem = iter.next().unwrap();
+
+				if elem.0 != "name"
+				{
+					// tracing subscriber seems to have code for this, but somehow it
+					// doesn't run on json output.
+					//
+					let key: &str = if elem.0.starts_with( "r#" ) { &elem.0[2..] }
+					                else { elem.0 }
+					;
+
+
+					write!( s, "{}=", key )?;
+
+					val_to_string( &elem.1, s )?;
+				}
+
+
+				for elem in iter
+				{
+					if elem.0 == "name" { continue; }
+
+
+					let key: &str = if elem.0.starts_with( "r#" ) { &elem.0[2..] }
+					                else { elem.0 }
+					;
+
+					write!( s, ", {}=", key )?;
+					val_to_string( &elem.1, s )?;
+				}
+
+				write!( s, " }}" )?;
+			}
 		}
 
 		_ => {}
