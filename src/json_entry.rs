@@ -28,6 +28,7 @@ pub enum LogLevel
 //
 pub struct JsonEntry
 {
+	pub text     : String         ,
 	pub value    : Value          ,
 	pub value_txt: Option<String> ,
 	pub lvl      : LogLevel       ,
@@ -39,9 +40,9 @@ pub struct JsonEntry
 
 impl JsonEntry
 {
-	pub fn new( txt: String ) -> Result<Self, serde_json::Error>
+	pub fn new( text: String ) -> Result<Self, serde_json::Error>
 	{
-		let mut value: Value = serde_json::from_str( &txt )?;
+		let mut value: Value = serde_json::from_str( &text )?;
 
 		let map    = value.as_object_mut().expect( "json to be object" );
 		let fields = map.remove( "fields" );
@@ -135,7 +136,7 @@ impl JsonEntry
 
 
 
-		Ok( Self { value, value_txt: None, lvl, msg, span, target } )
+		Ok( Self { value, text, value_txt: None, lvl, msg, span, target } )
 	}
 
 
@@ -177,64 +178,29 @@ impl JsonEntry
 	}
 
 
-	pub fn values( &self ) -> Vec<String>
-	{
-		let mut out = Vec::new();
-
-		for key in self.keys()
-		{
-			let value = self.get(key).expect_throw( "keys to exist" );
-			let mut s = String::new();
-
-			val_to_string( value, &mut s ).expect_throw( "serialize serde_json::Value" );
-			out.push( s );
-		}
-
-		out.sort();
-		out.dedup();
-		out
-	}
-
-
 	/// Should this line be shown for the given filter?
 	//
 	pub fn matches( &mut self, filter: &Filter ) -> bool
 	{
-		let mut show = true;
-
-		let value_txt = match &self.value_txt
+		match self.lvl()
 		{
-			None =>
-			{
-				let mut value_txt = self.values().join( " " );
-				value_txt.push_str( &self.msg );
-				self.value_txt = Some( value_txt );
-
-				self.value_txt.as_ref().unwrap()
-			}
-
-			Some( value_txt ) => value_txt,
-		};
-
-debug!( "value_text: {}", &value_txt );
-
-		if let Some(regex) = &filter.regex
-		{
-			if !regex.is_match( value_txt )
-			{
-				show = false;
-			}
+			LogLevel::Trace   => if !filter.trace { return false } ,
+			LogLevel::Debug   => if !filter.debug { return false } ,
+			LogLevel::Info    => if !filter.info  { return false } ,
+			LogLevel::Warn    => if !filter.warn  { return false } ,
+			LogLevel::Error   => if !filter.error { return false } ,
+			LogLevel::Unknown => {} // always show
 		}
 
 
-		match self.lvl()
+		let mut show = true;
+
+		if let Some(regex) = &filter.regex
 		{
-			LogLevel::Trace   => if !filter.trace { show = false } ,
-			LogLevel::Debug   => if !filter.debug { show = false } ,
-			LogLevel::Info    => if !filter.info  { show = false } ,
-			LogLevel::Warn    => if !filter.warn  { show = false } ,
-			LogLevel::Error   => if !filter.error { show = false } ,
-			LogLevel::Unknown => {} // always show
+			if !regex.is_match( &self.text )
+			{
+				show = false;
+			}
 		}
 
 		show
