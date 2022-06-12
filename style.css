@@ -124,6 +124,21 @@ body
 	width        : 98%;
 }
 
+.entry .message
+{
+	font-weight: bold;
+}
+
+
+/* Start the span on the next line. For the technique, see:
+   https://stackoverflow.com/a/26887399
+ */
+.entry .current-span:before
+{
+	content:  "\a ";
+	white-space: pre;
+}
+
 
 #columns
 {

@@ -1,6 +1,11 @@
 use crate::{ *, import::* };
 use serde_json::Value;
 
+
+mod obj_to_string;
+use obj_to_string::*;
+
+
 #[ derive( Copy, Clone, Debug, Eq, PartialEq ) ]
 //
 pub enum LogLevel
@@ -27,6 +32,7 @@ pub struct JsonEntry
 	pub value_txt: Option<String> ,
 	pub lvl      : LogLevel       ,
 	pub msg      : String         ,
+	pub span     : String         ,
 	pub target   : String         ,
 }
 
@@ -51,7 +57,7 @@ impl JsonEntry
 
 		// Add the line number directly to the file path:
 		//
-		if let Some(Value::Number(line)) = map.remove( "log.line" )
+		if let Some( Value::Number(line) ) = map.remove( "log.line" )
 		{
 			let line = line.as_u64().expect_throw( "line number to be u64" );
 			let file = map.get_mut( "log.file" );
@@ -91,19 +97,45 @@ impl JsonEntry
 
 		let msg = match map.remove( "message" )
 		{
-			Some(Value::String(s)) => format!( " ~ {}", s ),
+			Some( Value::String(s) ) => format!( " ~ {}", s ),
+
 			_ => panic!( "every log entry to have a message" ),
 		};
 
+
 		let target = match map.remove( "target" )
 		{
-			Some(Value::String(s)) => s,
+			Some( Value::String(s) ) => s,
+
 			_ => panic!( "every log entry to have a target" ),
 		};
 
 
+		let span = match map.remove( "spans" )
+		{
+			Some(Value::Array(a)) =>
+			{
+				let mut s   = String::new();
+				let     len = a.len();
 
-		Ok( Self { value, value_txt: None, lvl, msg, target } )
+				for i in 0..len
+				{
+					val_to_string( &a[i], &mut s ).expect( "boom" );
+
+					use std::fmt::Write;
+					if i < len-1 { write!( s, " ⊶ " ).unwrap(); }
+
+				}
+
+				s
+			},
+
+			_ => String::with_capacity(0),
+		};
+
+
+
+		Ok( Self { value, value_txt: None, lvl, msg, span, target } )
 	}
 
 
@@ -152,8 +184,10 @@ impl JsonEntry
 		for key in self.keys()
 		{
 			let value = self.get(key).expect_throw( "keys to exist" );
-			let s     = serde_json::to_string( &value ).expect_throw( "serialize serde_json::Value" );
-			out.push( s.trim().to_string() );
+			let mut s = String::new();
+
+			val_to_string( &value, &mut s ).expect_throw( "serialize serde_json::Value" );
+			out.push( s );
 		}
 
 		out.sort();
@@ -212,6 +246,7 @@ impl JsonEntry
 		let p     : HtmlElement = document().create_element( "p"     ).expect_throw( "create p tag"     ).unchecked_into();
 		let target: HtmlElement = document().create_element( "span"  ).expect_throw( "create span tag"  ).unchecked_into();
 		let msg   : HtmlElement = document().create_element( "span"  ).expect_throw( "create span tag"  ).unchecked_into();
+		let span  : HtmlElement = document().create_element( "span"  ).expect_throw( "create span tag"  ).unchecked_into();
 		let t     : HtmlElement = document().create_element( "table" ).expect_throw( "create table tag" ).unchecked_into();
 
 		let class = match self.lvl()
@@ -224,11 +259,12 @@ impl JsonEntry
 			LogLevel::Unknown => "unknown_loglvl" ,
 		};
 
-		div   .class_list().add_1( "entry"   ).expect_throw( "add entry to div"  );
-		div   .class_list().add_1( class     ).expect_throw( "add class to div"  );
-		p     .class_list().add_1( class     ).expect_throw( "add class to p"    );
-		target.class_list().add_1( "target"  ).expect_throw( "add class to span" );
-		msg   .class_list().add_1( "message" ).expect_throw( "add class to span" );
+		div   .class_list().add_1( "entry"        ).expect_throw( "add entry to div"  );
+		div   .class_list().add_1( class          ).expect_throw( "add class to div"  );
+		p     .class_list().add_1( class          ).expect_throw( "add class to p"    );
+		target.class_list().add_1( "target"       ).expect_throw( "add class to span" );
+		msg   .class_list().add_1( "message"      ).expect_throw( "add class to span" );
+		span  .class_list().add_1( "current-span" ).expect_throw( "add class to span" );
 
 		// TODO: we really shouldn't have to put the class on the table, but somehow some CSS didn't stick.
 		//
@@ -266,21 +302,17 @@ impl JsonEntry
 
 			let value = self.get(key).expect_throw( "keys to exist" );
 
-			let s = match &value
-			{
-				// spaces after the colon are non-breaking spaces.
-				//
-				Value::Null       => "null".to_string()                                        ,
-				Value::String (s) => s.to_string()                                             ,
-				Value::Number (n) => n.to_string()                                             ,
-				Value::Bool   (b) => b.to_string()                                             ,
-				Value::Array  (a) => serde_json::to_string(a).expect_throw( "stringify json" ) ,
-				Value::Object (o) => serde_json::to_string(o).expect_throw( "stringify json" ) ,
-			};
+			let mut s = String::new();
+			val_to_string( &value, &mut s ).expect_throw( "val_to_string" );
 
 			if key == "timestamp"
 			{
 				div.set_attribute( "data-time", &s ).expect_throw( "set data-time attribute" );
+			}
+
+			if key == "span" || key == "spans"
+			{
+				continue;
 			}
 
 			td3.set_inner_text( &s );
@@ -295,9 +327,11 @@ impl JsonEntry
 
 		msg   .set_inner_text( &self.msg    );
 		target.set_inner_text( &self.target );
+		span  .set_inner_text( &self.span   );
 
 		p  .append_child( &target ).expect_throw( "append_child to p"   );
 		p  .append_child( &msg    ).expect_throw( "append_child to p"   );
+		p  .append_child( &span   ).expect_throw( "append_child to p" );
 		div.append_child( &p      ).expect_throw( "append_child to div" );
 		div.append_child( &t      ).expect_throw( "append_child to div" );
 

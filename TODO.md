@@ -1,5 +1,6 @@
 # TODO
 
+- button to unfold all entries?
 - column folding broken on chrome, prob anything except firefox.
 - use ijson
 - make sure we don't run the regex on each line if the filter is the empty string.
@@ -10,7 +11,6 @@
 - blog post
 
 - graphical design!!! Make something beautiful.
-  - arrays and objects in field values are still using quotes.
 
 - when filters change, if the user is scrolled down, it might liberate space above. However we don't want any currently visible text to move up out of view. Will be easier when we associate the view with a time line by showing time separately.
   https://stackoverflow.com/questions/9834143/jquery-keep-window-from-changing-scroll-position-while-prepending-items-to-a-l
