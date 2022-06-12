@@ -13,7 +13,7 @@ pub fn val_to_string( obj: &Value, s: &mut impl fmt::Write ) -> fmt::Result
 		Value::Number(n) => write!( s, "{}", n )?,
 		Value::String(x) => write!( s, "{}", x )?,
 
-		Value::Array(a) if a.len() > 0  =>
+		Value::Array(a) if !a.is_empty()  =>
 		{
 			write!( s, "[ " )?;
 
@@ -24,7 +24,7 @@ pub fn val_to_string( obj: &Value, s: &mut impl fmt::Write ) -> fmt::Result
 			for elem in iter
 			{
 				write!( s, ", " )?;
-				val_to_string( &elem, s )?;
+				val_to_string( elem, s )?;
 			}
 
 			write!( s, " ]" )?;
@@ -33,7 +33,7 @@ pub fn val_to_string( obj: &Value, s: &mut impl fmt::Write ) -> fmt::Result
 
 		// We know it has at least one key:value pair.
 		//
-		Value::Object(o) if o.len() > 0 =>
+		Value::Object(o) if !o.is_empty() =>
 		{
 			let mut name = false;
 
@@ -44,7 +44,7 @@ pub fn val_to_string( obj: &Value, s: &mut impl fmt::Write ) -> fmt::Result
 			{
 				name = true;
 
-				val_to_string( &v, s )?;
+				val_to_string( v, s )?;
 			}
 
 
@@ -71,14 +71,14 @@ pub fn val_to_string( obj: &Value, s: &mut impl fmt::Write ) -> fmt::Result
 					// tracing subscriber seems to have code for this, but somehow it
 					// doesn't run on json output.
 					//
-					let key: &str = if elem.0.starts_with( "r#" ) { &elem.0[2..] }
+					let key: &str = if   elem.0.starts_with( "r#" ) { &elem.0[2..] }
 					                else { elem.0 }
 					;
 
 
 					write!( s, "{}=", key )?;
 
-					val_to_string( &elem.1, s )?;
+					val_to_string( elem.1, s )?;
 				}
 
 
@@ -92,7 +92,7 @@ pub fn val_to_string( obj: &Value, s: &mut impl fmt::Write ) -> fmt::Result
 					;
 
 					write!( s, ", {}=", key )?;
-					val_to_string( &elem.1, s )?;
+					val_to_string( elem.1, s )?;
 				}
 
 				write!( s, " }}" )?;

@@ -13,7 +13,7 @@ mod import
 {
 	pub use
 	{
-		log                  :: { *                                                                                       } ,
+		tracing              :: { trace, debug, info, warn, error                                                         } ,
 		web_sys              :: { *, console::log_1 as dbg                                                                } ,
 		wasm_bindgen         :: { JsCast, UnwrapThrowExt                                                                  } ,
 		thespis              :: { *                                                                                       } ,
@@ -56,7 +56,7 @@ use wasm_bindgen::prelude::*;
 pub async fn main()
 {
 	console_error_panic_hook::set_once();
-	//wasm_logger::init( wasm_logger::Config::new( log::Level::Trace ) );
+	// wasm_logger::init( wasm_logger::Config::new( log::Level::Trace ) );
 	tracing_wasm::set_as_global_default();
 
 	let upload    = get_id( "upload" );

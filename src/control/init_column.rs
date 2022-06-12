@@ -25,7 +25,7 @@ impl Handler<InitColumn> for Control
 			{
 				let mut update = false;
 
-				if let Some(show) = self.show.get_mut( &id )
+				if let Some(show) = self.show.get_mut( id )
 				{
 					for vis in show.iter_mut()
 					{
