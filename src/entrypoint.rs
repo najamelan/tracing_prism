@@ -23,7 +23,7 @@ mod import
 		std                  :: { marker::PhantomData, rc::Rc                                                             } ,
 		gloo_events          :: { *                                                                                       } ,
 		futures              :: { Stream, StreamExt, channel::{ mpsc::{ unbounded, UnboundedReceiver, UnboundedSender } } } ,
-		futures              :: { task::LocalSpawnExt                                                                     } ,
+		futures              :: { task::LocalSpawnExt, FutureExt                                                          } ,
 		std                  :: { task::*, pin::Pin, panic, collections::HashMap, sync::Arc, convert::TryInto             } ,
 		wasm_bindgen_futures :: { spawn_local, JsFuture                                                                   } ,
 		regex                :: { Regex                                                                                   } ,
@@ -56,8 +56,8 @@ use wasm_bindgen::prelude::*;
 pub async fn main()
 {
 	console_error_panic_hook::set_once();
-	wasm_logger::init( wasm_logger::Config::new( log::Level::Trace ) );
-	// tracing_wasm::set_as_global_default();
+	//wasm_logger::init( wasm_logger::Config::new( log::Level::Trace ) );
+	tracing_wasm::set_as_global_default();
 
 	let upload    = get_id( "upload" );
 	let file_evts = EHandler::new( &upload, "change", true );
@@ -70,13 +70,13 @@ pub async fn main()
 
 
 	let column_cont  = get_id( "columns" );
-	let addr_control = Addr::builder().start_local( Control::new(), &Bindgen ).expect_throw( "spawn control" );
+	let addr_control = Addr::builder().spawn_local( Control::new(), &Bindgen ).expect_throw( "spawn control" );
 
 	let (addr_columns, mb_columns) = Addr::builder().build();
 	let mut columns = Columns::new( column_cont, 3, addr_columns.clone(), addr_control.clone() );
 	columns.render().await;
 
-	spawn_local( async{ mb_columns.start_local( columns ).await; } );
+	spawn_local( mb_columns.start_local( columns ).map(|_|()) );
 
 	spawn_local( on_upload( file_evts , addr_control.clone() ) );
 	spawn_local( on_addcol( add_evts  , addr_columns         ) );

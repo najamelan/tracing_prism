@@ -1,11 +1,11 @@
 # Auto-generated from "Cargo.yml"
 [dependencies]
-async_nursery = "^0.3"
+async_nursery = "^0.5"
 console_error_panic_hook = "^0.1"
 futures = "^0.3"
 gloo-events = "^0.1"
 log = "^0.4"
-send_wrapper = "^0.5"
+send_wrapper = "^0.6"
 serde_json = "^1"
 serde_yaml = "^0.8"
 tracing-wasm = "^0.2"
@@ -15,7 +15,7 @@ wasm-logger = "^0.2"
 
 [dependencies.async_executors]
 features = ["bindgen"]
-version = "^0.4"
+version = "^0.6"
 
 [dependencies.futures-timer]
 features = ["wasm-bindgen"]
@@ -27,13 +27,11 @@ features = ["std", "unicode-perl", "unicode-case", "perf"]
 version = "^1"
 
 [dependencies.thespis]
-path = "../thespis/thespis"
-version = "0.1.0-alpha"
+version = "^0.1"
 
 [dependencies.thespis_impl]
 features = []
-path = "../thespis/thespis_impl"
-version = "0.1.0-alpha"
+version = "^0.2"
 
 [dependencies.tracing]
 features = ["log"]

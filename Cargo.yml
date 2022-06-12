@@ -14,19 +14,19 @@ lib:
 
 dependencies:
 
-  async_executors         : { version: ^0.4, features: [ bindgen ] }
-  async_nursery           : ^0.3
+  async_executors         : { version: ^0.6, features: [ bindgen ] }
+  async_nursery           : ^0.5
   console_error_panic_hook: ^0.1
   futures                 : ^0.3
   futures-timer           : { version: ^3, features: [wasm-bindgen] }
   gloo-events             : ^0.1
   log                     : ^0.4
   regex                   : { version: ^1, features: [ "std", "unicode-perl", "unicode-case", "perf" ], default-features: false }
-  send_wrapper            : ^0.5
+  send_wrapper            : ^0.6
   serde_json              : ^1
   serde_yaml              : ^0.8
-  thespis                 : { path: ../thespis/thespis, version: 0.1.0-alpha }
-  thespis_impl            : { path: ../thespis/thespis_impl, version: 0.1.0-alpha, features: [] }
+  thespis                 : { version: ^0.1 }
+  thespis_impl            : { version: ^0.2, features: [] }
   tracing                 : { version: ^0.1, features: [ log ] }
   tracing-wasm            : ^0.2
   wasm-bindgen            : ^0.2
