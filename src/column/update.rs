@@ -49,7 +49,7 @@ impl Handler<Update> for Column
 
 			if let Some(f) = msg.filter
 			{
-				self.filter( &block, &f );
+				self.filter( block, &f );
 			}
 
 			else // correctly apply the odd class.
@@ -85,19 +85,19 @@ impl Handler<Update> for Column
 			//
 			if let TextFormat::Json = msg.format
 			{
-				let logview_evts = EHandler::new( &block, "click", true );
+				let logview_evts = EHandler::new( block, "click", true );
 				let task         = Column::on_click_entry( logview_evts, self.addr.clone().expect_throw( "have addr" ) );
 
 				self.nursery.spawn_local( task ).expect_throw( "click evts on logview" );
 
 
-				let logview_evts = EHandler::new( &block, "mouseover", true );
+				let logview_evts = EHandler::new( block, "mouseover", true );
 				let task         = Column::on_mouse_over_entry( logview_evts, self.addr.clone().expect_throw( "have addr" ) );
 
 				self.nursery.spawn_local( task ).expect_throw( "click evts on logview" );
 			}
 
-			self.container.append_child( &block ).expect_throw( "append div" );
+			self.container.append_child( block ).expect_throw( "append div" );
 		}
 
 

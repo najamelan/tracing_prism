@@ -231,11 +231,11 @@ impl Control
 		{
 			// If there are pre-existing filters, process the text.
 			//
-			if let Some(mut filter) = self.filters.get_mut( &col.id() )
+			if let Some(filter) = self.filters.get_mut( &col.id() )
 			{
 				// we ignore the return as we will update all columns anyway, since there is a new text.
 				//
-				let _ = Self::filter( &mut self.lines, &mut self.show, &mut filter, all_have_filters );
+				let _ = Self::filter( &mut self.lines, &mut self.show, filter, all_have_filters );
 			}
 		}
 

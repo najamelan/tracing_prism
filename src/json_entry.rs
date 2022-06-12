@@ -118,9 +118,9 @@ impl JsonEntry
 				let mut s   = String::new();
 				let     len = a.len();
 
-				for i in 0..len
+				for (i, sp) in a.iter().enumerate().take(len)
 				{
-					val_to_string( &a[i], &mut s ).expect( "boom" );
+					val_to_string( sp, &mut s ).expect( "boom" );
 
 					use std::fmt::Write;
 					if i < len-1 { write!( s, " ⊶ " ).unwrap(); }
@@ -186,7 +186,7 @@ impl JsonEntry
 			let value = self.get(key).expect_throw( "keys to exist" );
 			let mut s = String::new();
 
-			val_to_string( &value, &mut s ).expect_throw( "serialize serde_json::Value" );
+			val_to_string( value, &mut s ).expect_throw( "serialize serde_json::Value" );
 			out.push( s );
 		}
 
@@ -213,13 +213,14 @@ impl JsonEntry
 				self.value_txt.as_ref().unwrap()
 			}
 
-			Some( value_txt ) => &value_txt,
+			Some( value_txt ) => value_txt,
 		};
 
+debug!( "value_text: {}", &value_txt );
 
 		if let Some(regex) = &filter.regex
 		{
-			if !regex.is_match( &value_txt )
+			if !regex.is_match( value_txt )
 			{
 				show = false;
 			}
@@ -303,7 +304,7 @@ impl JsonEntry
 			let value = self.get(key).expect_throw( "keys to exist" );
 
 			let mut s = String::new();
-			val_to_string( &value, &mut s ).expect_throw( "val_to_string" );
+			val_to_string( value, &mut s ).expect_throw( "val_to_string" );
 
 			if key == "timestamp"
 			{
